@@ -1,5 +1,6 @@
 const fs = require('fs');
 const http = require('http');
+const url = require('url')
 
 /**
  *! createServer() accept a callback function 
@@ -8,8 +9,22 @@ const http = require('http');
  *! callback function access two important variables, it is req and res 
 */
 const server = http.createServer((req, res) => {
-    console.log(res);
-    res.end('hello from the server');
+    const pathName = req.url;
+
+    console.log(pathName);
+
+    if(pathName === '/' || pathName === 'overview') {
+        res.end('this is OVERVIEW page')
+    }else if(pathName === '/product') {
+        res.end('this is PRODUCT page')
+    }else {
+        res.writeHead(404, {
+            'Content-type': 'text/html',
+            'my-own-header': 'hello-world'
+        })
+        res.end('<h1>Page not found</h1>')
+    }
+
 })
 
 
