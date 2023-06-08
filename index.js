@@ -27,7 +27,10 @@ const replaceTemplate = (temp, product) => {
 const server = http.createServer((req, res) => {
     const pathName = req.url;
 
-    console.log(pathName);
+    //console.log(url.parse(req.url, true));
+    //console.log(pathName);
+
+    const {query, pathname} = url.parse(req.url, true);
 
     // Overview page
     if(pathName === '/' || pathName === '/overview') {
@@ -40,7 +43,9 @@ const server = http.createServer((req, res) => {
 
     // Product page
     }else if(pathName === '/product') {
-        res.end('this is PRODUCT page')
+        const product = dataObj[1]
+        const output = replaceTemplate(tempProduct, product)
+        res.end(output)
 
     // api    
     }else if(pathName === '/api') {
