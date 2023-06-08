@@ -2,48 +2,51 @@ const fs = require('fs');
 const http = require('http');
 const url = require('url')
 
-/**
- *! we will use the synchronous readFile version 
- *! synchronous version will block the code execution but in this case it's not a problem
- *! this code just executed once in the beginning 
- *! only the callback function of createServer() will executed each time have a new request 
- *! this block code outside the callback function of createServer() so it will executed once we start the program  
-*/
-const data = fs.readFileSync(`${__dirname}/dev-data/data.json`, 'utf-8');
 
-/**
- *! createServer() accept a callback function 
- *! which will be fire each time a new request hit server   
- *! -----------------
- *! callback function access two important variables, it is req and res 
-*/
+const data = fs.readFileSync(`${__dirname}/dev-data/data.json`, 'utf-8');
+const dataObj = JSON.parse(data);
+const tempProduct = fs.readFileSync(`${__dirname}/templates/template-product.html`, 'utf-8');
+const tempCard = fs.readFileSync(`${__dirname}/templates/template-card.html`, 'utf-8')
+const tempOverview = fs.readFileSync(`${__dirname}/templates/template-overview.html`, 'utf-8')
+
+
+const replaceTemplate = (temp, product) => {
+    let output = temp.replace(/{%PRODUCTNAME%}/g, product.productName);
+    output = output.replace(/{%IMAGE%}/g, product.image); 
+    output = output.replace(/{%PRICE%}/g, product.price);
+    output = output.replace(/{%FROM%}/g, product.from);
+    output = output.replace(/{%NUTRIENTS%}/g, product.nutrients);
+    output = output.replace(/{%QUANTITY%}/g, product.quantity);
+    output = output.replace(/{%DESCRIPTION%}/g, product.description);
+    output = output.replace(/{%ID%}/g, product.id);
+    
+    if(!product.organic) output = output.replace(/{%NOT_ORGANIC%}/g, 'not-organic');
+    return output;
+}
+
 const server = http.createServer((req, res) => {
     const pathName = req.url;
 
     console.log(pathName);
 
-    if(pathName === '/' || pathName === 'overview') {
-        res.end('this is OVERVIEW page')
+    // Overview page
+    if(pathName === '/' || pathName === '/overview') {
+        res.writeHead(200, {
+            'Content-type': 'text/html'
+        });
+        const cardsHtml = dataObj.map(el => replaceTemplate(tempCard, el)).join('');
+        const output = tempOverview.replace('{%PRODUCT_CARDS%}', cardsHtml);
+        res.end(output);
+
+    // Product page
     }else if(pathName === '/product') {
         res.end('this is PRODUCT page')
+
+    // api    
     }else if(pathName === '/api') {
-
-        /**
-         *! this is not perfect because, each time user hit /api route 
-         *! the file will have to be read and then send back 
-         *! instead we just need read the file once in the beginning 
-         *! and then each time someone hit the route simply send back the data without having to read it each time user request it 
-        */
-        // fs.readFile(`${__dirname}/dev-data/data.json`, 'utf-8', (error, data) => {
-        //     res.writeHead(200, {
-        //         'Content-type': 'application/json',
-        //     })
-        //     res.end(data)
-        // })
-
-        // response data of readFileSync
         res.end(data)
 
+    // 404 page
     }else {
         res.writeHead(404, {
             'Content-type': 'text/html',
