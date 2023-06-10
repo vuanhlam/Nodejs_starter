@@ -67,6 +67,7 @@ app.get('/api/v1/tours/:id', (req, res) => {
 /**
  *! PUT: expect receive the entire new updated object
  *! PATCH: only expect the property that actually be updated on the object
+ *! 404 the requested resource was not found on the server
  */
 app.patch('/api/v1/tours/:id', (req, res) => {
   if (req.params.id * 1 > tours.length) {
@@ -83,6 +84,26 @@ app.patch('/api/v1/tours/:id', (req, res) => {
     }
   });
 });
+
+
+/**
+ *! 204 mean no content     
+*/
+app.delete('/api/v1/tours/:id', (req, res) => {
+  if (req.params.id * 1 > tours.length) {
+    return res.status(404).json({
+      status: 'fail',
+      message: 'Invalid ID',
+    });
+  }
+
+  res.status(204).json({
+    status: 'success',
+    data: null
+  });
+});
+
+
 
 const port = 3000;
 app.listen(port, () => {
