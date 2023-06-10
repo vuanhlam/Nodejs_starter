@@ -45,22 +45,42 @@ app.post('/api/v1/tours', (req, res) => {
 });
 
 app.get('/api/v1/tours/:id', (req, res) => {
-  const id  = req.params.id * 1;
-    
-  if(id > tours.length) {
+  const id = req.params.id * 1;
+
+  if (id > tours.length) {
     return res.status(404).json({
-        status: 'fail',
-        message: 'Invalid ID'
-    })
+      status: 'fail',
+      message: 'Invalid ID',
+    });
   }
-  
+
   const tour = tours.find((item) => item.id === id);
 
   res.status(200).json({
     status: 'success',
     data: {
-      tours: tour
+      tours: tour,
     },
+  });
+});
+
+/**
+ *! PUT: expect receive the entire new updated object
+ *! PATCH: only expect the property that actually be updated on the object
+ */
+app.patch('/api/v1/tours/:id', (req, res) => {
+  if (req.params.id * 1 > tours.length) {
+    return res.status(404).json({
+      status: 'fail',
+      message: 'Invalid ID',
+    });
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+        tour: '<Updated tour here....>'
+    }
   });
 });
 
