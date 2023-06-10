@@ -5,7 +5,26 @@ const fs = require('fs');
  *! express() function will add a bunch of function to variable app
  */
 const app = express();
+
+/**
+ *! in order to use Middleware we use app.use(middlewareFunction) 
+*/
 app.use(express.json());
+
+app.use((req, res, next) => {
+    console.log('Hello from the Middleware');
+    /**
+     *! if don't call next() the request/response cycle will be stuck in this point 
+     *! we would not be able to move on and never can send back the response to the client 
+    */
+   next();
+})
+
+app.use((req, res, next) => {
+    req.requestTime = new Date().toISOString();
+    next();
+})
+
 
 const tours = JSON.parse(
   fs.readFileSync(`${__dirname}/dev-data/data/tours-simple.json`)
@@ -14,6 +33,7 @@ const tours = JSON.parse(
 const getAllTours = (req, res) => {
   res.status(200).json({
     status: 'success',
+    requestAt: req.requestTime,
     results: tours.length,
     data: {
       tours: tours,
