@@ -1,34 +1,35 @@
 const express = require('express');
 const fs = require('fs');
+const morgan = require('morgan');
 
-/**
- *! express() function will add a bunch of function to variable app
- */
+
+
 const app = express();
 
-/**
- *! in order to use Middleware we use app.use(middlewareFunction) 
-*/
+// 1) MIDDLEWARE
 app.use(express.json());
+app.use(morgan('dev'));
 
 app.use((req, res, next) => {
-    console.log('Hello from the Middleware');
-    /**
-     *! if don't call next() the request/response cycle will be stuck in this point 
-     *! we would not be able to move on and never can send back the response to the client 
-    */
-   next();
-})
+  console.log('Hello from the Middleware');
+  /**
+   *! if don't call next() the request/response cycle will be stuck in this point
+   *! we would not be able to move on and never can send back the response to the client
+   */
+  next();
+});
 
 app.use((req, res, next) => {
-    req.requestTime = new Date().toISOString();
-    next();
-})
-
+  req.requestTime = new Date().toISOString();
+  next();
+});
 
 const tours = JSON.parse(
   fs.readFileSync(`${__dirname}/dev-data/data/tours-simple.json`)
 );
+
+
+// 2) ROUTE HANDLER
 
 const getAllTours = (req, res) => {
   res.status(200).json({
@@ -120,17 +121,26 @@ const deleteTour = (req, res) => {
 
 //app.delete('/api/v1/tours/:id', deleteTour);
 
+
+
+// 3) ROUTES
+
 /**
  *! chain method
  */
-app.route('/api/v1/tours')
-    .get(getAllTours)
-    .post(createTour);
+app
+  .route('/api/v1/tours')
+  .get(getAllTours)
+  .post(createTour);
 
-app.route('/api/v1/tours/:id')
-    .get(getTour)
-    .patch(updateTour)
-    .delete(deleteTour)
+app
+  .route('/api/v1/tours/:id')
+  .get(getTour)
+  .patch(updateTour)
+  .delete(deleteTour);
+
+
+// 4) START SERVER 
 
 const port = 3000;
 app.listen(port, () => {
