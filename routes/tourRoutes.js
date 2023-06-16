@@ -5,7 +5,8 @@ const {
   getTour,
   updateTour,
   deleteTour,
-  checkID
+  checkID,
+  checkBody
 } = require('./../controllers/tourController');
 
 const router = express.Router();
@@ -21,7 +22,21 @@ const router = express.Router();
 */
 router.param('id', checkID);
 
-router.route('/').get(getAllTours).post(createTour);
+/**
+ *! Create  a checkBody  middleware 
+ *! check if body contains the name  and price  property
+ *! if not send back 400 (bad request) basically is invalid request from the client 
+*/
+
+router.route('/')
+  .get(getAllTours)
+  /**
+   *! this is called chaining middleware  
+   *! when we have a post request for route /
+   *! it will then run middleware checkBody first and then createTour
+   *! 
+  */
+  .post(checkBody, createTour);
 
 router.route('/:id').get(getTour).patch(updateTour).delete(deleteTour);
 
