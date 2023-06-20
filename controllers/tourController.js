@@ -42,11 +42,12 @@ exports.createTour = (req, res) => {
   // console.log(req.body);
 
   const newID = tours[tours.length - 1].id + 1;
+  // eslint-disable-next-line node/no-unsupported-features/es-syntax
   const newTour = [...tours, { newID, ...req.body }];
   fs.writeFile(
     `${__dirname}/dev-data/data/tours-simple.json`,
     JSON.stringify(newTour),
-    (err) => {
+    () => {
       res.status(201).json({
         status: 'success',
         data: {
