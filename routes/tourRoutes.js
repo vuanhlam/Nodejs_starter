@@ -5,7 +5,6 @@ const {
   getTour,
   updateTour,
   deleteTour,
-  checkID,
   checkBody,
 } = require('../controllers/tourController');
 
@@ -20,7 +19,7 @@ const router = express.Router();
  *! in the param middleware function we acutally access to the fourth argument
  *! that one is the value of parameter
  */
-router.param('id', checkID);
+//router.param('id', checkID);
 
 /**
  *! Create  a checkBody  middleware
