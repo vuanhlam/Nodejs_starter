@@ -1,25 +1,33 @@
+/* eslint-disable import/no-useless-path-segments */
 const Tour = require('./../models/tourModel');
 
-exports.getAllTours = (req, res) => {
-  // res.status(200).json({
-  //   status: 'success',
-  //   requestAt: req.requestTime,
-  //   results: tours.length,
-  //   data: {
-  //     tours: tours,
-  //   },
-  // });
+exports.getAllTours = async (req, res) => {
+  try {
+    const tours = await Tour.find();
+    res.status(200).json({
+      status: 'success',
+      requestAt: req.requestTime,
+      results: tours.length,
+      data: {
+        tours: tours,
+      },
+    });
+  } catch (error) {
+    res.status(404).json({
+      status: 'fail',
+      message: error,
+    });
+  }
 };
 
 exports.createTour = async (req, res) => {
   try {
-
     // ---create tour old way---
     // const newTour = new Tour({});
-    // newTour.save()  // this version call method save() from the document 
+    // newTour.save()  // this version call method save() from the document
 
     // ---create tour new way---
-    const newTour = await Tour.create(req.body);  // this version call directly Model, and return a Promise
+    const newTour = await Tour.create(req.body); // this version call directly Model, and return a Promise
 
     // response to client
     res.status(201).json({
@@ -31,20 +39,34 @@ exports.createTour = async (req, res) => {
   } catch (error) {
     res.status(400).json({
       status: 'fail',
-        message: 'Invalid data sent',
+      message: 'Invalid data sent',
     });
   }
 };
 
-exports.getTour = (req, res) => {
-  // const id = req.params.id * 1;
-  // const tour = tours.find((item) => item.id === id);
-  // res.status(200).json({
-  //   status: 'success',
-  //   data: {
-  //     tours: tour,
-  //   },
-  // });
+exports.getTour = async (req, res) => {
+  try {
+    /**
+     *! - findById is just a shorthand or a helper function, 
+     *! - we don't need to write like this => { _id: req.params.id }
+     *! - but behind the sence it's gonna do exactly this  Tour.findOne({ _id: req.params.id })
+     *! - but mongoose simply want to male our life esier 
+    */
+    const tour = await Tour.findById(req.params.id); 
+    // Tour.findOne({ _id: req.params.id })  // -- this method is the same as above function 
+    
+    res.status(200).json({
+      status: 'success',
+      data: {
+        tours: tour,
+      },
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: 'fail',
+      message: error,
+    });
+  }
 };
 
 exports.updateTour = (req, res) => {
