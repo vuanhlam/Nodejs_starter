@@ -5,7 +5,6 @@ const {
   getTour,
   updateTour,
   deleteTour,
-  checkBody,
 } = require('../controllers/tourController');
 
 const router = express.Router();
@@ -36,7 +35,7 @@ router
    *! it will then run middleware checkBody first and then createTour
    *!
    */
-  .post(checkBody, createTour);
+  .post(createTour);
 
 router.route('/:id').get(getTour).patch(updateTour).delete(deleteTour);
 

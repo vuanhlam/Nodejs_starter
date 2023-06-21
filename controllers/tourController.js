@@ -1,17 +1,5 @@
 const Tour = require('./../models/tourModel');
 
-
-exports.checkBody = (req, res, next) => {
-  console.log(req.body);
-  if(!req.body.name || !req.body.price) {
-    return res.status(400).json({
-      status: 'fail',
-      message: 'Missing name or price'
-    })
-  }
-  next();
-}
-
 exports.getAllTours = (req, res) => {
   // res.status(200).json({
   //   status: 'success',
@@ -23,31 +11,34 @@ exports.getAllTours = (req, res) => {
   // });
 };
 
-exports.createTour = (req, res) => {
-  // console.log(req.body);
+exports.createTour = async (req, res) => {
+  try {
 
-  // const newID = tours[tours.length - 1].id + 1;
-  // // eslint-disable-next-line node/no-unsupported-features/es-syntax
-  // const newTour = [...tours, { newID, ...req.body }];
-  // fs.writeFile(
-  //   `${__dirname}/dev-data/data/tours-simple.json`,
-  //   JSON.stringify(newTour),
-  //   () => {
-  //     res.status(201).json({
-  //       status: 'success',
-  //       data: {
-  //         newTour,
-  //       },
-  //     });
-  //   }
-  // );
+    // ---create tour old way---
+    // const newTour = new Tour({});
+    // newTour.save()  // this version call method save() from the document 
+
+    // ---create tour new way---
+    const newTour = await Tour.create(req.body);  // this version call directly Model, and return a Promise
+
+    // response to client
+    res.status(201).json({
+      status: 'success',
+      data: {
+        tour: newTour,
+      },
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: 'fail',
+        message: 'Invalid data sent',
+    });
+  }
 };
 
 exports.getTour = (req, res) => {
   // const id = req.params.id * 1;
-
   // const tour = tours.find((item) => item.id === id);
-
   // res.status(200).json({
   //   status: 'success',
   //   data: {
