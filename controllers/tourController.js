@@ -18,7 +18,7 @@ exports.getAllTours = async (req, res) => {
       message: error,
     });
   }
-};
+}; 
 
 exports.createTour = async (req, res) => {
   try {
@@ -93,9 +93,17 @@ exports.updateTour = async (req, res) => {
   }
 };
 
-exports.deleteTour = (req, res) => {
-  res.status(204).json({
-    status: 'success',
-    data: null,
-  });
+exports.deleteTour = async (req, res) => {
+  try {
+    await Tour.findByIdAndDelete(req.params.id);
+    res.status(204).json({  
+      status: 'success',
+      data: null,
+    });
+  } catch (error) {
+    res.status(204).json({
+      status: 'success',
+      message: 'delete fail',
+    });
+  }
 };
