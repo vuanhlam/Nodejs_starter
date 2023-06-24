@@ -3,33 +3,33 @@ const Tour = require('./../models/tourModel');
 
 exports.getAllTours = async (req, res) => {
   try {
-    // BUILD QUERY 
+    // ---- BUILD QUERY ----
+    // 1) Filtering 
     // eslint-disable-next-line node/no-unsupported-features/es-syntax
     const queryObj = { ...req.query };
     const excludeFields = ['page', 'sort', 'limit', 'fields'];
     excludeFields.forEach((el) => delete queryObj[el]);
 
-    /**
-     *! this Tour.find(queryObj) method is going to return a query
-     *! then using await the query will execute and comeback with the document that actually match our query
-     *  TODO: if we do like this: const query = await Tour.find(queryObj);
-     *! mean that we directly got the document return and can not chaining more function like
-     ** sorting, pagination, or another features
-     *! to solve this problem we just save the query to a variable, not using await key work
-     *! then using that query to chain more method
-     *! and finally execute the query using await
-     *!
-    */
+    // 2) Advanced filtering
+    let queryStr = JSON.stringify(queryObj);
+    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`);
+    console.log(JSON.parse(queryStr));
 
-    console.log(req.query);
+    /**
+     *! query was written manually in mongoDB
+     */
+    // { duration: { $gte: 5 }, difficulty: 'medium' }
+    /**
+     *! req.query -> this query missing $ 
+    */
     // { duration: { gte: '5' }, difficulty: 'medium' }
 
-    const query = Tour.find(queryObj);
+    const query = Tour.find(JSON.parse(queryStr));
 
-    // EXECUTE QUERY
+    // ---- EXECUTE QUERY ----
     const tours = await query;
 
-    // SEND RESPONSE
+    // ---- SEND RESPONSE ----
     res.status(200).json({
       status: 'success',
       requestAt: req.requestTime,
