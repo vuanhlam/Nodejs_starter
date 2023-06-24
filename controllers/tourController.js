@@ -3,36 +3,33 @@ const Tour = require('./../models/tourModel');
 
 exports.getAllTours = async (req, res) => {
   try {
+    // BUILD QUERY 
     // eslint-disable-next-line node/no-unsupported-features/es-syntax
-    const queryObj = {...req.query};
+    const queryObj = { ...req.query };
     const excludeFields = ['page', 'sort', 'limit', 'fields'];
-    excludeFields.forEach(el => delete queryObj[el]);
+    excludeFields.forEach((el) => delete queryObj[el]);
 
     /**
-     *! first way
-     */
-    // const tours = await Tour.find({
-    //   difficulty: 'medium',
-    //   duration: 7
-    // });
-
-    /**
-     *! this find() method is going to return a query 
-     *! that is the reason that why we can chain method like this  
-     *!  ==> Tour.find().where('duration').equals(7)
+     *! this Tour.find(queryObj) method is going to return a query
+     *! then using await the query will execute and comeback with the document that actually match our query
+     *  TODO: if we do like this: const query = await Tour.find(queryObj);
+     *! mean that we directly got the document return and can not chaining more function like
+     ** sorting, pagination, or another features
+     *! to solve this problem we just save the query to a variable, not using await key work
+     *! then using that query to chain more method
+     *! and finally execute the query using await
+     *!
     */
-    const tours = await Tour.find(queryObj);
 
-    /**
-     *! another way
-     *! this is the same as above, we just use some special mongoose method
-     */
-    // const tours = await Tour.find()
-    //   .where('duration')
-    //   .equals(7)
-    //   .where('difficulty')
-    //   .equals('medium');
+    console.log(req.query);
+    // { duration: { gte: '5' }, difficulty: 'medium' }
 
+    const query = Tour.find(queryObj);
+
+    // EXECUTE QUERY
+    const tours = await query;
+
+    // SEND RESPONSE
     res.status(200).json({
       status: 'success',
       requestAt: req.requestTime,
