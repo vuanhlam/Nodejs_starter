@@ -3,7 +3,36 @@ const Tour = require('./../models/tourModel');
 
 exports.getAllTours = async (req, res) => {
   try {
-    const tours = await Tour.find();
+    // eslint-disable-next-line node/no-unsupported-features/es-syntax
+    const queryObj = {...req.query};
+    const excludeFields = ['page', 'sort', 'limit', 'fields'];
+    excludeFields.forEach(el => delete queryObj[el]);
+
+    /**
+     *! first way
+     */
+    // const tours = await Tour.find({
+    //   difficulty: 'medium',
+    //   duration: 7
+    // });
+
+    /**
+     *! this find() method is going to return a query 
+     *! that is the reason that why we can chain method like this  
+     *!  ==> Tour.find().where('duration').equals(7)
+    */
+    const tours = await Tour.find(queryObj);
+
+    /**
+     *! another way
+     *! this is the same as above, we just use some special mongoose method
+     */
+    // const tours = await Tour.find()
+    //   .where('duration')
+    //   .equals(7)
+    //   .where('difficulty')
+    //   .equals('medium');
+
     res.status(200).json({
       status: 'success',
       requestAt: req.requestTime,
@@ -18,7 +47,7 @@ exports.getAllTours = async (req, res) => {
       message: error,
     });
   }
-}; 
+};
 
 exports.createTour = async (req, res) => {
   try {
@@ -74,10 +103,10 @@ exports.updateTour = async (req, res) => {
     const tour = await Tour.findByIdAndUpdate(req.params.id, req.body, {
       // with this option the function will return the new object that currently updated
       new: true,
-      // each time we update a certain document 
-      //then the validator that we specify in the schema will run again 
-      runValidators: true
-    })
+      // each time we update a certain document
+      //then the validator that we specify in the schema will run again
+      runValidators: true,
+    });
 
     res.status(200).json({
       status: 'success',
@@ -96,7 +125,7 @@ exports.updateTour = async (req, res) => {
 exports.deleteTour = async (req, res) => {
   try {
     await Tour.findByIdAndDelete(req.params.id);
-    res.status(204).json({  
+    res.status(204).json({
       status: 'success',
       data: null,
     });
