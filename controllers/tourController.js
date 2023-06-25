@@ -1,6 +1,8 @@
+/* eslint-disable node/no-unsupported-features/es-syntax */
 /* eslint-disable no-unused-expressions */
 /* eslint-disable import/no-useless-path-segments */
 const Tour = require('./../models/tourModel');
+const APIFeatures = require('./../utils/apiFeatures');
 
 exports.aliasTopTours = (req, res, next) => {
   req.query.limit = '5';
@@ -11,52 +13,13 @@ exports.aliasTopTours = (req, res, next) => {
 
 exports.getAllTours = async (req, res) => {
   try {
-    // ---- BUILD QUERY ----
-    // 1.A) Filtering
-    // eslint-disable-next-line node/no-unsupported-features/es-syntax
-    const queryObj = { ...req.query };
-    const excludeFields = ['page', 'sort', 'limit', 'fields'];
-    excludeFields.forEach((el) => delete queryObj[el]);
-
-    // 1.A) Advanced filtering
-    let queryStr = JSON.stringify(queryObj);
-    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
-    // console.log(JSON.parse(queryStr));
-
-    let query = Tour.find(JSON.parse(queryStr));
-
-    // 2. Sorting
-    if (req.query.sort) {
-      console.log('in sort');
-      const sortFields = req.query.sort.split(',').join(' ');
-      // console.log(sortFields);
-      query = query.sort(sortFields);
-    } else {
-      query = query.sort('-createdAt');
-    }
-
-    // 3. Limit Fields sent back to client
-    if (req.query.fields) {
-      console.log('in fields');
-      const limitFields = req.query.fields.split(',').join(' ');
-      query = query.select(limitFields);
-    } else {
-      query = query.select('-__v');
-    }
-
-    // 4. Pagination
-    const page = req.query.page * 1 || 1;
-    const limit = req.query.limit * 1 || 10;
-    const skip = (page - 1) * limit;
-    query = query.skip(skip).limit(limit);
-
-    if (req.query.page) {
-      const countTours = await Tour.countDocuments();
-      if (skip >= countTours) throw new Error('This page is not exist');
-    }
-
     // ---- EXECUTE QUERY ----
-    const tours = await query;
+    const features = new APIFeatures(Tour.find(), req.query)
+      .filter()
+      .sort()
+      .limitFields()
+      .paginate();
+    const tours = await features.mongooseQuery;
 
     // ---- SEND RESPONSE ----
     res.status(200).json({
