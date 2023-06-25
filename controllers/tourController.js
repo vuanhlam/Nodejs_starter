@@ -1,5 +1,13 @@
+/* eslint-disable no-unused-expressions */
 /* eslint-disable import/no-useless-path-segments */
 const Tour = require('./../models/tourModel');
+
+exports.aliasTopTours = (req, res, next) => {
+  req.query.limit = '5';
+  req.query.sort = '-ratingsAverage,price';
+  req.query.fields = 'name, price, ratingsAverage, summary, difficulty';
+  next();
+};
 
 exports.getAllTours = async (req, res) => {
   try {
@@ -19,18 +27,20 @@ exports.getAllTours = async (req, res) => {
 
     // 2. Sorting
     if (req.query.sort) {
+      console.log('in sort');
       const sortFields = req.query.sort.split(',').join(' ');
-      console.log(sortFields);
+      // console.log(sortFields);
       query = query.sort(sortFields);
-    }else {
-      query = query.sort('-createdAt')
-    } 
+    } else {
+      query = query.sort('-createdAt');
+    }
 
-    // 3. Limit Fields
-    if(req.query.fields){
+    // 3. Limit Fields sent back to client
+    if (req.query.fields) {
+      console.log('in fields');
       const limitFields = req.query.fields.split(',').join(' ');
       query = query.select(limitFields);
-    }else {
+    } else {
       query = query.select('-__v');
     }
 
@@ -40,9 +50,9 @@ exports.getAllTours = async (req, res) => {
     const skip = (page - 1) * limit;
     query = query.skip(skip).limit(limit);
 
-    if(req.query.page) {
+    if (req.query.page) {
       const countTours = await Tour.countDocuments();
-      if(skip >= countTours) throw new Error('This page is not exist');
+      if (skip >= countTours) throw new Error('This page is not exist');
     }
 
     // ---- EXECUTE QUERY ----
