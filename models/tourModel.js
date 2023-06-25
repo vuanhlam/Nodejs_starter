@@ -54,7 +54,8 @@ const tourSchema = new mongoose.Schema({
   images: [String],
   createdAt: {
     type: Date,
-    default: Date.now()
+    default: Date.now(),
+    select: false
   },
   // the tour can be start in diffent date 
   startDates: [Date]
