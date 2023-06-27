@@ -125,3 +125,49 @@ exports.deleteTour = async (req, res) => {
     });
   }
 };
+
+/**
+ *! Mongoose DB aggregation pipeline for data aggregation
+ ** the idea is we will define the pipeline that all the documents from a certain
+ ** collection go through where they are process step by step in order to tranform them in to aggregated results
+ *! ex: min, max, average ...
+ */
+
+exports.getTourStats = async (req, res) => {
+  try {
+    /**
+     *! aggregation pipeline is a mongoose features
+     *! using the a aggregation pipeline is just a bit like doing a regular query
+     ** the different here is that the aggregation can manipulate data in a couple of different step
+     ** define the step by pass an Array call as stages
+     ** in that stages have a lot of stages then the documents pass through this stages one by one, step by step, in defined sequences as we defined in the Array. ⬇️
+     ** => each element in the Array will be one of the stage
+     */
+    const stats = await Tour.aggregate([
+      {
+        $match: { ratingsAverage: { $gte: 4.5 } },
+      },
+      {
+        $group: {
+          _id: null , // we want everything in one group, so that we can calculate statistic for all of the tour together 
+          numTours: { $sum: 1 }, //for each of documents that go through the pipeline 1 will be added to this numTours counter
+          numRatings: { $sum: '$ratingsQuantity' },
+          avgrating: { $avg: '$ratingsAverage' },
+          avgPrice: { $avg: '$price' },
+          minPrice: { $min: '$price' },
+          maxPrice: { $max: '$price' }  
+        }
+      }
+    ]);
+
+    res.status(200).json({
+      status: 'success',
+      data: stats,
+    });
+  } catch (error) {
+    res.status(204).json({
+      status: 'success',
+      message: 'delete fail',
+    });
+  }
+};
