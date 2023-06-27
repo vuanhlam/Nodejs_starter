@@ -149,7 +149,8 @@ exports.getTourStats = async (req, res) => {
       },
       {
         $group: {
-          _id: null , // we want everything in one group, so that we can calculate statistic for all of the tour together 
+          _id: { $toUpper: '$difficulty'} , // group result for different field  
+          //_id: '$ratingsAverage',
           numTours: { $sum: 1 }, //for each of documents that go through the pipeline 1 will be added to this numTours counter
           numRatings: { $sum: '$ratingsQuantity' },
           avgrating: { $avg: '$ratingsAverage' },
@@ -157,6 +158,15 @@ exports.getTourStats = async (req, res) => {
           minPrice: { $min: '$price' },
           maxPrice: { $max: '$price' }  
         }
+      },
+      {
+        $sort: {
+          avgPrice: 1
+        }
+      },
+      // repeat stage 
+      {
+        $match: { _id: { $ne: 'EASY'} }
       }
     ]);
 
