@@ -128,7 +128,7 @@ exports.deleteTour = async (req, res) => {
 
 /**
  *! Mongoose DB aggregation pipeline for data aggregation
- ** the idea is we will define the pipeline that all the documents from a certain
+ ** the idea is that we will define the pipeline that all the documents from a certain
  ** collection go through where they are process step by step in order to tranform them in to aggregated results
  *! ex: min, max, average ...
  */
@@ -149,25 +149,25 @@ exports.getTourStats = async (req, res) => {
       },
       {
         $group: {
-          _id: { $toUpper: '$difficulty'} , // group result for different field  
+          _id: { $toUpper: '$difficulty' }, // group result for different field
           //_id: '$ratingsAverage',
           numTours: { $sum: 1 }, //for each of documents that go through the pipeline 1 will be added to this numTours counter
           numRatings: { $sum: '$ratingsQuantity' },
           avgrating: { $avg: '$ratingsAverage' },
           avgPrice: { $avg: '$price' },
           minPrice: { $min: '$price' },
-          maxPrice: { $max: '$price' }  
-        }
+          maxPrice: { $max: '$price' },
+        },
       },
       {
         $sort: {
-          avgPrice: 1
-        }
+          avgPrice: 1,
+        },
       },
-      // repeat stage 
+      // repeat stage
       {
-        $match: { _id: { $ne: 'EASY'} }
-      }
+        $match: { _id: { $ne: 'EASY' } },
+      },
     ]);
 
     res.status(200).json({
@@ -175,9 +175,71 @@ exports.getTourStats = async (req, res) => {
       data: stats,
     });
   } catch (error) {
-    res.status(204).json({
+    res.status(404).json({
+      status: 'fail',
+      message: error,
+    });
+  }
+};
+
+// count how many tour they are for each of the month in a given year
+exports.getMonthlyPlan = async (req, res) => {
+  try {
+    const year = req.params.year * 1;
+
+    const plan = await Tour.aggregate([
+      {
+        //! Deconstructs an array field from the input documents to output a document for each element.
+        $unwind: '$startDates',
+      },
+      {
+        $match: {
+          startDates: {
+            $gte: new Date(`${year}-01-01`),
+            $lte: new Date(`${year}-12-31`),
+          },
+        },
+      },
+      {
+        $group: {
+          //! $month Returns the month for a date as a number between 1 and 12  
+          _id: { $month: '$startDates' }, 
+          numTourStarts: { $sum: 1 },
+          tours: { $push: '$name' },
+        },
+      },
+      {
+        $addFields: { month: '$_id' },
+      },
+      {
+        /**
+         *! simply give each of the field name a 0 or 1
+         */
+        $project: {
+          _id: 0,
+        },
+      }, 
+      {
+        $sort: { numTourStarts: -1 },
+      },
+      
+      {
+        //! only 6 documents will be return 
+        $limit: 6
+      }
+    ]);
+
+    res.status(200).json({
       status: 'success',
-      message: 'delete fail',
+      total: plan.length,
+      data: {
+        plan,
+      },
+    });
+  } catch (error) {
+    res.status(404).json({
+      status: 'fail',
+      message: error,
     });
   }
 };
