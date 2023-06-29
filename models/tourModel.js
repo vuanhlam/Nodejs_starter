@@ -1,3 +1,4 @@
+/* eslint-disable prefer-arrow-callback */
 const mongoose = require('mongoose');
 const slugify = require('slugify');
 
@@ -62,6 +63,10 @@ const tourSchema = new mongoose.Schema(
     },
     // the tour can be start in diffent date
     startDates: [Date],
+    secretTour: {
+      type: Boolean,
+      default: false
+    }
   },
   {
     toJSON: { virtuals: true },
@@ -102,16 +107,37 @@ tourSchema.pre('save', function (next) {
 
 //* we can have multiple middleware pre or post Middleware for the same hook
 // eslint-disable-next-line prefer-arrow-callback
-tourSchema.pre('save', function (next) {
-  console.log('Will save document');
-  next()
-})
+// tourSchema.pre('save', function (next) {
+//   console.log('Will save document');
+//   next()
+// })
 
 //* post Middleware has access not only to next but also to the document that was just saved to the database 
 //* post Middleware function are executed after all the pre Middleware function have completed
 // eslint-disable-next-line prefer-arrow-callback
-tourSchema.post('save', function (doc, next) {
-  console.log(doc);
+// tourSchema.post('save', function (doc, next) {
+//   console.log(doc);
+//   next()
+// })
+
+/**
+ *! Query Middleware allow us to run function before or after a certain query is executed  
+*/
+
+//* pre find Hook basically a Middleware gonna run before any find() query 
+//* 'find' will point to the current query, not to the current document 
+// tourSchema.pre('find', function(next) { // find pre hook will not work for findOne
+tourSchema.pre(/^find/, function(next) { // we will using regex to apply to all the event that start with name find 
+  //* this key word point to the query, so that we can chain another find() method 
+  this.find({ secretTour: { $ne: true } })
+  this.start = Date.now();
+  next();
+})
+
+//* this Midleware only run after the Qeury have already executed
+tourSchema.post(/^find/, function(docs, next) {
+  console.log(`Query took ${Date.now() - this.start} milliseconds`);
+  console.log(docs);
   next()
 })
 
