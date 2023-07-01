@@ -17,7 +17,7 @@ class APIFeatures {
     return this;
   }
 
-  sort() {
+  sort() { 
     if (this.queryString.sort) {
       const sortFields = this.queryString.sort.split(',').join(' ');
       this.mongooseQuery = this.mongooseQuery.sort(sortFields);

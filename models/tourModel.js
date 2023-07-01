@@ -14,7 +14,7 @@ const tourSchema = new mongoose.Schema(
     duration: {
       type: Number,
       require: [true, 'A tour must have a duration'],
-    },
+    }, 
     maxGroupSize: {
       type: Number,
       require: [true, 'A tour must have a group size'],
@@ -79,8 +79,7 @@ tourSchema.virtual('durationWeeks').get(function () {
 });
 
 /**
- *! just like Express mongoose also have a concept of Middleware
- *! the first type of Middleware is called Document Middleware
+ *! just like Express, mongoose also have a concept of Middleware
  ** just like Express we can use mongoose's Middleware to make something happen between two events
  ** for example each time a new Document is saved to the database, we can run a function between the save command and actual saving of the document
  ** that why mongoose Middleware is also called pre and post hook
@@ -121,15 +120,15 @@ tourSchema.pre('save', function (next) {
 // })
 
 /**
- *! Query Middleware allow us to run function before or after a certain query is executed  
+ *! Query Middleware allow us to run function before or after a certain "query" is executed  
 */
 
 //* pre find Hook basically a Middleware gonna run before any find() query 
 //* 'find' will point to the current query, not to the current document 
-// tourSchema.pre('find', function(next) { // find pre hook will not work for findOne
+// tourSchema.pre('find', function(next) { // pre find hook will not work for findOne
 tourSchema.pre(/^find/, function(next) { // we will using regex to apply to all the event that start with name find 
   //* this key word point to the query, so that we can chain another find() method 
-  this.find({ secretTour: { $ne: true } })
+  this.find({ secretTour: { $ne: true } }) // filter the secretTour is false, mean hide the secretTour
   this.start = Date.now();
   next();
 })
@@ -140,6 +139,19 @@ tourSchema.post(/^find/, function(docs, next) {
   console.log(docs);
   next()
 })
+
+/**
+ *! Aggregation Middleware allow us to run function before or after an aggregation happens
+*/
+tourSchema.pre('aggregate', function(next) {
+  //* this key word point to the current aggregation object
+  //* unshift() will add an element to the beginning of the array
+  // console.log(this.pipeline());
+  //* add new state to the beginning of the array of the pipeline
+  this.pipeline().unshift({ $match: { secretTour: { $ne: true } } })
+  next()
+})
+
 
 //create Modal
 const Tour = mongoose.model('Tour', tourSchema);

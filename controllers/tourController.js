@@ -165,9 +165,9 @@ exports.getTourStats = async (req, res) => {
         },
       },
       // repeat stage
-      {
-        $match: { _id: { $ne: 'EASY' } },
-      },
+      // {
+      //   $match: { _id: { $ne: 'EASY' } },
+      // },
     ]);
 
     res.status(200).json({
@@ -203,7 +203,7 @@ exports.getMonthlyPlan = async (req, res) => {
       {
         $group: {
           //! $month Returns the month for a date as a number between 1 and 12  
-          _id: { $month: '$startDates' }, 
+          _id: { $month: '$startDates' },  
           numTourStarts: { $sum: 1 },
           tours: { $push: '$name' },
         },
