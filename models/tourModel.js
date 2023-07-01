@@ -1,6 +1,7 @@
 /* eslint-disable prefer-arrow-callback */
 const mongoose = require('mongoose');
 const slugify = require('slugify');
+const validator = require('validator');
 
 // create Schema
 const tourSchema = new mongoose.Schema(
@@ -11,6 +12,7 @@ const tourSchema = new mongoose.Schema(
       unique: true,
       maxLength: [40, 'A tour name must have less or equal than 40 characters'],  // maxLength and minLength only work for String value
       minLength: [10, 'A tour name must have more or equal than 10 characters'],
+      validate: [validator.isAlpha, 'Tour name must only contain characters'], // this is a validator package, we can use it to validate the data
     },
     slug: String,
     duration: {
@@ -47,7 +49,17 @@ const tourSchema = new mongoose.Schema(
       type: Number,
       require: [true, 'A tour must have a price'],
     },
-    priceDiscount: Number,
+    priceDiscount: {
+      type: Number,
+      validate: { 
+        validator: function(val) { // this must use function 
+          // this only point to current doc on NEW document creation
+          // so this function not gonna work on update 
+          return val < this.price
+        },
+        message: 'Discount price ({VALUE}) should be below regular price'
+      }
+    },
     summary: {
       type: String,
       // trim only work for String value
@@ -105,7 +117,7 @@ tourSchema.virtual('durationWeeks').get(function () {
  *! this is pre Middleware, which is gonna run before an actual event
  *! callback function will be called before an actual document is saved to the database
  */
-//* DOCUMENT MIDDLEWARE: runs before .save() and .create() not .insertMany()
+//* DOCUMENT MIDDLEWARE: runs before .save() and .create() and not work with .insertMany() and update()
 //* just like in Express we also have next() func in mongoose Middleware basically to call the next Middleware in the stack 
 tourSchema.pre('save', function (next) {
   this.slug = slugify(this.name, { lower: true });
