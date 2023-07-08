@@ -4,6 +4,7 @@
 const Tour = require('./../models/tourModel');
 const APIFeatures = require('./../utils/apiFeatures');
 const catchAsync = require('../utils/catchAsync');
+const AppError = require('../utils/appError');
 
 exports.aliasTopTours = (req, res, next) => {
   req.query.limit = '5';
@@ -55,14 +56,19 @@ exports.getTour = catchAsync(async (req, res, next) => {
    *! - we don't need to write like this => { _id: req.params.id }
    *! - but behind the sence it's gonna do exactly this  Tour.findOne({ _id: req.params.id })
    *! - but mongoose simply want to male our life esier
-   */
+   */ 
   const tour = await Tour.findById(req.params.id);
   // Tour.findOne({ _id: req.params.id })  // -- this method is the same as above function
+
+  if (!tour) {
+    //* return immediately and not move on to the next line
+    return next(new AppError('No tour found with that ID', 404));
+  }
 
   res.status(200).json({
     status: 'success',
     data: {
-      tours: tour,
+      tours: tour
     },
   });
 });
@@ -75,6 +81,11 @@ exports.updateTour = catchAsync(async (req, res, next) => {
     //then the validator that we specify in the schema will run again
     runValidators: true,
   });
+
+  if (!tour) {
+    //* return immediately and not move on to the next line
+    return next(new AppError('No tour found with that ID', 404));
+  }
 
   res.status(200).json({
     status: 'success',
@@ -144,7 +155,7 @@ exports.getTourStats = catchAsync(async (req, res, next) => {
 // count how many tour they are for each of the month in a given year
 exports.getMonthlyPlan = catchAsync(async (req, res, next) => {
   const year = req.params.year * 1;
- 
+
   const plan = await Tour.aggregate([
     {
       //! Deconstructs an array field from the input documents to output a document for each element.
