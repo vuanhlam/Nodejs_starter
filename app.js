@@ -23,10 +23,7 @@ app.use(express.static(`${__dirname}/public`));
 
 app.use((req, res, next) => {
   req.requestTime = new Date().toISOString();
-  /**
-   *! if don't call next() the request/response cycle will be stuck in this point
-   *! we would not be able to move on and never can send back the response to the client
-   */
+  // console.log(req.headers);
   next();
 });
 
