@@ -20,6 +20,7 @@ const userSchema = new moongoose.Schema({
     type: String,
     require: [true, 'Password is not allowed empty'],
     minlength: 8,
+    select: false, // never show password as an output
   },
   passwordConfirm: {
     type: String,
@@ -51,6 +52,14 @@ userSchema.pre('save', async function (next) {
   this.passwordConfirm = undefined;
   next();
 });
+
+/**
+ *! this function is called instance method
+ *! An Instance method is basically method that gonna be available on all the document of a certain Collection
+ */
+userSchema.methods.correctPassword = async function (candidatePassword, userPassword) {
+  return await bcrypt.compare(candidatePassword, userPassword);
+};
 
 const User = moongoose.model('User', userSchema);
 
