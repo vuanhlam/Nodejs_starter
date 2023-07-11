@@ -36,6 +36,7 @@ const userSchema = new moongoose.Schema({
       message: 'Password are not the same!',
     },
   },
+  passwordChangedAt: Date 
 });
 
 /**
@@ -54,11 +55,25 @@ userSchema.pre('save', async function (next) {
 });
 
 /**
- *! this function is called instance method
+ ** this function is called instance method
  *! An Instance method is basically method that gonna be available on all the document of a certain Collection
  */
-userSchema.methods.correctPassword = async function (candidatePassword, userPassword) {
+userSchema.methods.correctPassword = async function (
+  candidatePassword,
+  userPassword
+) {
   return await bcrypt.compare(candidatePassword, userPassword);
+};
+
+//* Instance methods 
+userSchema.methods.changedPasswordAfter = function (JWTTimestamp) { // JWTTimestamp which seted when the token was issued
+  if (this.passwordChangedAt) {
+    const changedTimestamp = parseInt(this.passwordChangedAt.getTime() / 1000, 10);
+    // console.log(changedTimestamp, JWTTimestamp);
+    return JWTTimestamp < changedTimestamp
+  }
+
+  return false; // not change password after token was created 
 };
 
 const User = moongoose.model('User', userSchema);

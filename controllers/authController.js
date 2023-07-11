@@ -1,5 +1,6 @@
 /* eslint-disable arrow-body-style */
 /* eslint-disable import/no-extraneous-dependencies */
+const { promisify } = require('util');
 const jwt = require('jsonwebtoken');
 const User = require('../models/userModal');
 const catchAsync = require('../utils/catchAsync');
@@ -12,8 +13,17 @@ const signToken = (id) => {
 };
 
 exports.signUp = catchAsync(async (req, res, next) => {
-  //   const newUser = await User.create(req.body);
-  const newUser = await User.create({
+
+  /**
+   *! the mistake of this code is that, we create a new user using all the data in the req.body 
+   *! so the problem here is everyone can specify the role as an admin  
+  */
+  // const newUser = await User.create(req.body);
+
+  /**
+   *TODO: Fixed 
+  */
+  const newUser = await User.create({ 
     name: req.body.name,
     email: req.body.email,
     password: req.body.password,
@@ -41,12 +51,15 @@ exports.login = catchAsync(async (req, res, next) => {
 
   // 2) check if user exists && password is correct
   const user = await User.findOne({ email }).select('+password');
+  if(!user) {
+    return next(new AppError('User is not exists', 401));
+  }
 
   //* because instance method correctPassword() is defined in the userModal is available on all the document
   //* so the user above is a document and it's can call to that function
   const correct = await user.correctPassword(password, user.password);
 
-  if (!user || !correct) {
+  if (!correct) {
     return next(new AppError('Incorrect email or password', 401)); // 401 unauthorized
   }
 
@@ -54,24 +67,54 @@ exports.login = catchAsync(async (req, res, next) => {
   const token = signToken(user._id);
   res.status(200).json({
     status: 'success',
-    token
+    token,
   });
 });
 
-exports.protect =  catchAsync(async (req, res, next) => {
+exports.protect = catchAsync(async (req, res, next) => {
   let token;
-  // 1) Getting token and check of it's there 
-  if(req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+  //TODO (1) Getting token and check of it's there
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith('Bearer')
+  ) {
     token = req.headers.authorization.split(' ')[1];
   }
-  if(!token) {
-    return next(new AppError('You are not login! Please log in to get Access.', 401))
+  if (!token) {
+    return next(
+      new AppError('You are not login! Please log in to get Access.', 401)
+    );
   }
 
-  // 2) Verification the token 
+  //TODO (2) Verification the token -> compare test signature and original signature 
+  const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET); // if error happen it will return an Invalid signature or JsonWebTokenError
 
-  // 3) Check if user still exists 
+  //TODO (3) Check if user still exists
+  /**
+   *! Why need to be check if user still exists
+   *! - What if the user has been deleted in the meantime, so the token still exits, but the user is no longer in existence
+   *! then we don't want to log them in
+   */
+  const currentUser = await User.findById(decoded.id);
+  if (!currentUser) {
+    return next(
+      new AppError('The user belong to this token no longer exist.', 401)
+    );
+  }
 
-  // 4) Check if user changed password after the token was issued
+  //TODO (4) Check if user changed password after the token was issued
+  /**
+   *! - What if user has actually changed his password after the token was created, well that token should also not work anymore
+   *! for example someone stole token from a user, so all token that was issued before the password changed so longer be valid
+   */
+  if (currentUser.changedPasswordAfter(decoded.iat)) {
+    return next(
+      new AppError('User recently changed  password! Please log in again.', 401)
+    );
+  }
+
+  // 5) GRANT ACCESS TO PROTECTED ROUTE
+  req.user = currentUser;
+
   next();
-})
+});
