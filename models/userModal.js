@@ -16,6 +16,11 @@ const userSchema = new moongoose.Schema({
     validate: [validator.isEmail, 'Please provide a valid email'],
   },
   photo: String,
+  role: {
+    type: String,
+    enum: ['user', 'guide', 'lead-guide', 'admin'],
+    default: 'user'
+  },
   password: {
     type: String,
     require: [true, 'Password is not allowed empty'],
@@ -36,7 +41,7 @@ const userSchema = new moongoose.Schema({
       message: 'Password are not the same!',
     },
   },
-  passwordChangedAt: Date 
+  passwordChangedAt: Date,
 });
 
 /**
@@ -65,15 +70,19 @@ userSchema.methods.correctPassword = async function (
   return await bcrypt.compare(candidatePassword, userPassword);
 };
 
-//* Instance methods 
-userSchema.methods.changedPasswordAfter = function (JWTTimestamp) { // JWTTimestamp which seted when the token was issued
+//* Instance methods
+userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
+  // JWTTimestamp which seted when the token was issued
   if (this.passwordChangedAt) {
-    const changedTimestamp = parseInt(this.passwordChangedAt.getTime() / 1000, 10);
+    const changedTimestamp = parseInt(
+      this.passwordChangedAt.getTime() / 1000,
+      10
+    );
     // console.log(changedTimestamp, JWTTimestamp);
-    return JWTTimestamp < changedTimestamp
+    return JWTTimestamp < changedTimestamp;
   }
 
-  return false; // not change password after token was created 
+  return false; // not change password after token was created
 };
 
 const User = moongoose.model('User', userSchema);

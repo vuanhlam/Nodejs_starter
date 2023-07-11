@@ -13,17 +13,16 @@ const signToken = (id) => {
 };
 
 exports.signUp = catchAsync(async (req, res, next) => {
-
   /**
-   *! the mistake of this code is that, we create a new user using all the data in the req.body 
-   *! so the problem here is everyone can specify the role as an admin  
-  */
+   *! the mistake of this code is that, we create a new user using all the data in the req.body
+   *! so the problem here is everyone can specify the role as an admin
+   */
   // const newUser = await User.create(req.body);
 
   /**
-   *TODO: Fixed 
-  */
-  const newUser = await User.create({ 
+   *TODO: Fixed
+   */
+  const newUser = await User.create({
     name: req.body.name,
     email: req.body.email,
     password: req.body.password,
@@ -51,7 +50,7 @@ exports.login = catchAsync(async (req, res, next) => {
 
   // 2) check if user exists && password is correct
   const user = await User.findOne({ email }).select('+password');
-  if(!user) {
+  if (!user) {
     return next(new AppError('User is not exists', 401));
   }
 
@@ -86,7 +85,7 @@ exports.protect = catchAsync(async (req, res, next) => {
     );
   }
 
-  //TODO (2) Verification the token -> compare test signature and original signature 
+  //TODO (2) Verification the token -> compare test signature and original signature
   const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET); // if error happen it will return an Invalid signature or JsonWebTokenError
 
   //TODO (3) Check if user still exists
@@ -118,3 +117,15 @@ exports.protect = catchAsync(async (req, res, next) => {
 
   next();
 });
+
+exports.reStrictTo = (...roles) => {
+  return catchAsync(async (req, res, next) => {
+    // roles ['admin', 'lead-guide']
+    if (!roles.includes(req.user.role)) {
+      return next(
+        new AppError('You do not have permisson to perform this action', 403)
+      ); //403 forbidden , for authorization basically
+    }
+    next();
+  });
+};
