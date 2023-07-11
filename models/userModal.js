@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const moongoose = require('mongoose');
 const validator = require('validator');
 // eslint-disable-next-line import/no-extraneous-dependencies
@@ -19,7 +20,7 @@ const userSchema = new moongoose.Schema({
   role: {
     type: String,
     enum: ['user', 'guide', 'lead-guide', 'admin'],
-    default: 'user'
+    default: 'user',
   },
   password: {
     type: String,
@@ -42,6 +43,8 @@ const userSchema = new moongoose.Schema({
     },
   },
   passwordChangedAt: Date,
+  passwordResetToken: String,
+  passwordResetExpires: Date
 });
 
 /**
@@ -83,6 +86,23 @@ userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
   }
 
   return false; // not change password after token was created
+};
+
+//* Instance methods
+userSchema.methods.createPasswordResetToken = function () {
+  /**
+   *! the token gonna be send to the user, like a reset password 
+   *! can not save resetToken directly to the database, if hacker got this plain resetToken then it's not good
+  */
+  const resetToken = crypto.randomBytes(32).toString('hex'); 
+
+  this.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex') // hash resetToken to save to the database
+
+  // console.log({resetToken}, this.passwordResetToken);  
+
+  this.passwordResetExpires = Date.now() + 10 * 60 * 1000; // 10 minute
+
+  return resetToken
 };
 
 const User = moongoose.model('User', userSchema);
