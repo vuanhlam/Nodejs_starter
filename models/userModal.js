@@ -85,14 +85,14 @@ userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
     return JWTTimestamp < changedTimestamp;
   }
 
-  return false; // not change password after token was created
+  return false; // not change password after token was create d
 };
 
 //* Instance methods
 userSchema.methods.createPasswordResetToken = function () {
   /**
    *! the token gonna be send to the user, like a reset password 
-   *! can not save resetToken directly to the database, if hacker got this plain resetToken then it's not good
+   *! can not save resetToken directly to the database, if hacker got this plain resetToken then it's not good, so we need to hash the password 
   */
   const resetToken = crypto.randomBytes(32).toString('hex'); 
 
