@@ -44,7 +44,7 @@ const userSchema = new moongoose.Schema({
   },
   passwordChangedAt: Date,
   passwordResetToken: String,
-  passwordResetExpires: Date
+  passwordResetExpires: Date,
 });
 
 /**
@@ -61,6 +61,25 @@ userSchema.pre('save', async function (next) {
   this.passwordConfirm = undefined;
   next();
 });
+
+
+
+userSchema.pre('save', function (next) {
+  /**
+   *! if password was not modified then not set property passwordChangedAt
+   *! what about creating a new document, the first time the document was created, not modified 
+   */
+  if (!this.isModified('password') || this.isNew) return next();
+
+  /**
+   *! sometime saving to the database is slower than creating new token  
+   *! making it so the changePassword timestamp is sometime set a bit after the jwt has been created  
+  */
+  this.passwordChangedAt = Date.now() - 1000;
+  next();
+});
+
+
 
 /**
  ** this function is called instance method
@@ -91,18 +110,21 @@ userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
 //* Instance methods
 userSchema.methods.createPasswordResetToken = function () {
   /**
-   *! the token gonna be send to the user, like a reset password 
-   *! can not save resetToken directly to the database, if hacker got this plain resetToken then it's not good, so we need to hash the password 
-  */
-  const resetToken = crypto.randomBytes(32).toString('hex'); 
+   *! the token gonna be send to the user, like a reset password
+   *! can not save resetToken directly to the database, if hacker got this plain resetToken then it's not good, so we need to hash the password
+   */
+  const resetToken = crypto.randomBytes(32).toString('hex');
 
-  this.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex') // hash resetToken to save to the database
+  this.passwordResetToken = crypto
+    .createHash('sha256')
+    .update(resetToken)
+    .digest('hex'); // hash resetToken to save to the database
 
-  // console.log({resetToken}, this.passwordResetToken);  
+  // console.log({resetToken}, this.passwordResetToken);
 
   this.passwordResetExpires = Date.now() + 10 * 60 * 1000; // 10 minute
 
-  return resetToken
+  return resetToken;
 };
 
 const User = moongoose.model('User', userSchema);

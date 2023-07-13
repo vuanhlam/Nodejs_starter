@@ -6,6 +6,7 @@ const User = require('../models/userModal');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const sendEmail = require('../utils/email');
+const crypto = require('crypto');
 
 const signToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -140,7 +141,11 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
 
   //TODO (2) Generate the random token
   const resetToken = await user.createPasswordResetToken();
-  await user.save({ validateBeforeSave: false });
+  /**
+   *! we do not need validate data because we just need save some new field like passwordResetExpires 
+   *! so use { validateBeforeSave: false } to skip validate
+  */
+  await user.save({ validateBeforeSave: false }); 
 
   //TODO (3) Send it to user's email
   const resetURL = `${req.protocol}://${req.get(
@@ -153,7 +158,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
     await sendEmail({
       email: user.email,
       subject: 'Your password reset token (valid for 10 min)',
-      message
+      message,
     });
 
     res.status(200).json({
@@ -165,8 +170,53 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
     user.passwordResetExpires = undefined;
     await user.save({ validateBeforeSave: false });
 
-    return next(new AppError('There was an error sending the email, try again later!', 500));
+    return next(
+      new AppError(
+        'There was an error sending the email, try again later!',
+        500
+      )
+    );
   }
 });
 
-exports.resetPassword = (req, res, next) => {};
+exports.resetPassword = catchAsync(async (req, res, next) => {
+  //TODO (1) get user based on the token
+  const hashedToken = crypto
+    .createHash('sha256')
+    .update(req.params.token)
+    .digest('hex');
+
+  const user = await User.findOne({
+    passwordResetToken: hashedToken,
+    passwordResetExpires: { $gt: Date.now() },
+  });
+
+  //TODO (2) If token has not expired, and there is user, set the new password
+  if (!user) {
+    return next(new AppError('Token is invalid or has expired', 400)); //400 bad request
+  }
+
+  user.password = req.body.password;
+  user.passwordConfirm = req.body.passwordConfirm;
+  user.passwordResetToken = undefined;
+  user.passwordResetExpires = undefined;
+  /**
+   *! with this one we don't use { validateBeforeSave: false }
+   *! because we need validate password and passwordConfirm before save 
+  */
+  await user.save(); 
+
+  //TODO (3) Update changedPasswordAt property for the user
+  //* implement in userModal using pre save hook (moongoose Middleware)
+
+  //TODO (4) Log the user in, send JWT
+  const token = signToken(user._id);
+
+  res.status(201).json({
+    status: 'success',
+    token,
+    data: {
+      user: user,
+    },
+  });
+});
