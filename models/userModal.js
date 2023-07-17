@@ -35,7 +35,7 @@ const userSchema = new moongoose.Schema({
 
     //! Customize validator
     validate: {
-      //this only works on CREATE and SAVE!!!
+      //this only works on CREATE and SAVE!!!, if using findByIdAndUpdate it not gonna work 
       validator: function (el) {
         return this.password === el;
       },
@@ -86,8 +86,8 @@ userSchema.pre('save', function (next) {
  *! An Instance method is basically method that gonna be available on all the document of a certain Collection
  */
 userSchema.methods.correctPassword = async function (
-  candidatePassword,
-  userPassword
+  candidatePassword, //  pass need to be checked 
+  userPassword // pass of user in database
 ) {
   return await bcrypt.compare(candidatePassword, userPassword);
 };
@@ -111,7 +111,7 @@ userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
 userSchema.methods.createPasswordResetToken = function () {
   /**
    *! the token gonna be send to the user, like a reset password
-   *! can not save resetToken directly to the database, if hacker got this plain resetToken then it's not good, so we need to hash the password
+   *! can not save resetToken directly to the database, if hacker got this plain resetToken then it's not good, so we need to hash the token
    */
   const resetToken = crypto.randomBytes(32).toString('hex');
 
