@@ -18,6 +18,20 @@ const signToken = (id) => {
 const createSendToken = (user, statusCode, res) => {
   const token = signToken(user._id);
 
+  const cookieOptions = {
+    expires: new Date(
+      Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000 // convert to milisecond 24 * 60 * 60 * 1000
+    ), 
+    httpOnly: true, // cookie can not be accessed or modify in anyway by the browser
+  };
+
+  if (process.env.NODE_ENV === 'production') cookieOptions.secure = true; // the cookie only be send on encrypted connection -> https
+
+  res.cookie('jwt', token, cookieOptions);
+
+  // Remove password from the output
+  user.password = undefined;
+
   res.status(statusCode).json({
     status: 'success',
     token,
@@ -234,7 +248,7 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
    *! Why we can not use findByIdAndUpdate
    *! In userModal some function (pre save Middleware relevant with password) and validator will not work with findByIdAndUpdate
    */
- 
+
   //TODO (4) Log user in, send JWT
   createSendToken(user, 200, res);
 });
