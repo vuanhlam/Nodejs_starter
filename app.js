@@ -6,6 +6,7 @@ const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
+const hpp = require('hpp');
 
 const userRouter = require('./routes/userRoutes');
 const tourRouter = require('./routes/tourRoutes');
@@ -21,38 +22,50 @@ const app = express();
 //TODO (1) GLOBAL MIDDLEWARE
 
 //* ---- Set security HTTP Headers ----
-app.use(helmet())
-
+app.use(helmet());
 
 //* ---- Limit requests from the same api ----
 /**
  *! how many requests per IP going to allowed in a certain amount of time
  *! the above mean: allow 100 request from the same IP in 1 hour
  */
- const limiter = rateLimit({
-  max: 2,
+const limiter = rateLimit({
+  max: 20,
   windowMs: 60 * 60 * 1000,
   message: 'Too many request from this IP, please try again in an hour!',
 });
 app.use('/api', limiter);
 
 //* ---- Body parser, reading data from the body into req.body ----
-app.use(express.json({
-  limit: '10kb' // limit the amount of data that come from the body
-}));
-
+app.use(
+  express.json({
+    limit: '10kb', // limit the amount of data that come from the body
+  })
+);
 
 //TODO: Data sanitization against NOSQL query injection
 app.use(mongoSanitize());
 
-//TODO: Data sanitization against XSS 
+//TODO: Data sanitization against XSS
 /**
  *! this will then clean any user input from Malicious html code basically
- *! Imagine the attacker would try to insert some Malicious html code with some javaScript code 
-*/
-app.use(xss())
+ *! Imagine the attacker would try to insert some Malicious html code with some javaScript code
+ */
+app.use(xss());
 
-
+//TODO: Prevent parameter pollution
+app.use(
+  hpp({
+    whitelist: [
+      'duration',
+      'ratingsQuantity',
+      'ratingsAverage',
+      'maxGroupSize',
+      'difficulty',
+      'price',
+    ],
+  })
+);
 
 //* ---- Development logging ----
 if (process.env.NODE_ENV === 'development') {
