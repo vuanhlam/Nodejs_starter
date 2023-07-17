@@ -44,7 +44,7 @@ exports.getAllUser = (req, res) => {
 /**
  *! only have permission update name and email
  */
-exports.updateMe = catchAsync(async (req, res, next) => { 
+exports.updateMe = catchAsync(async (req, res, next) => {
   //TODO (1) Create error if user POSTs password data
   if (req.body.password || req.body.passwordConfirm) {
     return next(new AppError('This route is not for password update.', 400));
@@ -74,6 +74,15 @@ exports.updateMe = catchAsync(async (req, res, next) => {
       updatedUser,
     },
   });
+});
+
+exports.deleteMe = catchAsync(async (req, res, next) => {
+  await User.findByIdAndUpdate(req.user.id, { active: false })
+
+  res.status(204).json({
+    status: 'success',
+    data: null
+  })
 });
 
 exports.getUser = (req, res) => {

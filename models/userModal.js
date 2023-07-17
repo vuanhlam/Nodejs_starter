@@ -35,7 +35,7 @@ const userSchema = new moongoose.Schema({
 
     //! Customize validator
     validate: {
-      //this only works on CREATE and SAVE!!!, if using findByIdAndUpdate it not gonna work  
+      //this only works on CREATE and SAVE!!!, if using findByIdAndUpdate it not gonna work
       validator: function (el) {
         return this.password === el;
       },
@@ -45,6 +45,18 @@ const userSchema = new moongoose.Schema({
   passwordChangedAt: Date,
   passwordResetToken: String,
   passwordResetExpires: Date,
+  active: {
+    type: Boolean,
+    default: true,
+    select: false,
+  },
+});
+
+userSchema.pre(/^find/, function (next) {
+  // -> /^find/ this regular expression apply to all
+  // this points to the current query
+  this.find({ active: { $ne: false } });
+  next();
 });
 
 /**
@@ -62,31 +74,27 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
-
-
 userSchema.pre('save', function (next) {
   /**
    *! if password was not modified then not set property passwordChangedAt
-   *! what about creating a new document, the first time the document was created, not modified 
+   *! what about creating a new document, the first time the document was created, not modified
    */
   if (!this.isModified('password') || this.isNew) return next();
 
   /**
-   *! sometime saving to the database is slower than creating new token  
-   *! making it so the changePassword timestamp is sometime set a bit after the jwt has been created  
-  */
+   *! sometime saving to the database is slower than creating new token
+   *! making it so the changePassword timestamp is sometime set a bit after the jwt has been created
+   */
   this.passwordChangedAt = Date.now() - 1000;
   next();
 });
-
-
 
 /**
  ** this function is called instance method
  *! An Instance method is basically method that gonna be available on all the document of a certain Collection
  */
 userSchema.methods.correctPassword = async function (
-  candidatePassword, //  pass need to be checked 
+  candidatePassword, //  pass need to be checked
   userPassword // pass of user in database
 ) {
   return await bcrypt.compare(candidatePassword, userPassword);
