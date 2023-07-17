@@ -1,6 +1,8 @@
+/* eslint-disable import/no-extraneous-dependencies */
 /* eslint-disable prettier/prettier */
 const express = require('express');
 const morgan = require('morgan');
+const rateLimit = require('express-rate-limit');
 const userRouter = require('./routes/userRoutes');
 const tourRouter = require('./routes/tourRoutes');
 const AppError = require('./utils/appError');
@@ -8,7 +10,7 @@ const globalErrorHandler = require('./controllers/errorController');
 
 const app = express();
 
-// 1) MIDDLEWARE
+// 1) GLOBAL MIDDLEWARE
 /**
  *! app.js is usually mainly use for Middleware declaration
  *! we have all the Middleware that we want to apply to all the routes
@@ -19,6 +21,18 @@ app.use(express.json());
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
+
+/**
+ *! how many requests per IP going to allowed in a certain amount of time 
+ *! the above mean: allow 100 request from the same IP in 1 hour 
+*/
+const limiter = rateLimit({
+  max: 2,
+  windowMs: 60 * 60 * 1000,
+  message: 'Too many request from this IP, please try again in an hour!'
+});
+app.use('/api', limiter)
+
 app.use(express.static(`${__dirname}/public`));
 
 app.use((req, res, next) => {
