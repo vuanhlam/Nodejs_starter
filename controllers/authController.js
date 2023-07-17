@@ -232,7 +232,7 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
   await user.save();
   /**
    *! Why we can not use findByIdAndUpdate
-   *! In userModal some function (pre save Middleware) and validator will not work with findByIdAndUpdate
+   *! In userModal some function (pre save Middleware relevant with password) and validator will not work with findByIdAndUpdate
    */
  
   //TODO (4) Log user in, send JWT

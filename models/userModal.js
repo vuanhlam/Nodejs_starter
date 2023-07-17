@@ -35,7 +35,7 @@ const userSchema = new moongoose.Schema({
 
     //! Customize validator
     validate: {
-      //this only works on CREATE and SAVE!!!, if using findByIdAndUpdate it not gonna work 
+      //this only works on CREATE and SAVE!!!, if using findByIdAndUpdate it not gonna work  
       validator: function (el) {
         return this.password === el;
       },
