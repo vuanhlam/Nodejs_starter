@@ -3,45 +3,58 @@
 const express = require('express');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
+
 const userRouter = require('./routes/userRoutes');
 const tourRouter = require('./routes/tourRoutes');
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/errorController');
 
-const app = express();
-
-// 1) GLOBAL MIDDLEWARE
 /**
  *! app.js is usually mainly use for Middleware declaration
  *! we have all the Middleware that we want to apply to all the routes
  */
-app.use(express.json());
+const app = express();
 
-// console.log(process.env.NODE_ENV);
+//TODO (1) GLOBAL MIDDLEWARE
+
+//* ---- Set security HTTP Headers ----
+app.use(helmet())
+
+
+//* ---- Limit requests from the same api ----
+/**
+ *! how many requests per IP going to allowed in a certain amount of time
+ *! the above mean: allow 100 request from the same IP in 1 hour
+ */
+ const limiter = rateLimit({
+  max: 2,
+  windowMs: 60 * 60 * 1000,
+  message: 'Too many request from this IP, please try again in an hour!',
+});
+app.use('/api', limiter);
+
+//* ---- Body parser, reading data from the body into req.body ----
+app.use(express.json({
+  limit: '10kb' // limit the amount of data that come from the body
+}));
+
+//* ---- Development logging ----
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
-/**
- *! how many requests per IP going to allowed in a certain amount of time 
- *! the above mean: allow 100 request from the same IP in 1 hour 
-*/
-const limiter = rateLimit({
-  max: 2,
-  windowMs: 60 * 60 * 1000,
-  message: 'Too many request from this IP, please try again in an hour!'
-});
-app.use('/api', limiter)
-
+//* ---- Serving static files ----
 app.use(express.static(`${__dirname}/public`));
 
+//* ---- Test  middleware ----
 app.use((req, res, next) => {
   req.requestTime = new Date().toISOString();
   // console.log(req.headers);
   next();
 });
 
-// 2) ROUTER
+//TODO (2) ROUTER
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
 
