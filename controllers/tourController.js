@@ -56,7 +56,7 @@ exports.getTour = catchAsync(async (req, res, next) => {
    *! - we don't need to write like this => { _id: req.params.id }
    *! - but behind the sence it's gonna do exactly this  Tour.findOne({ _id: req.params.id })
    *! - but mongoose simply want to male our life esier
-   */ 
+   */
   const tour = await Tour.findById(req.params.id);
   // Tour.findOne({ _id: req.params.id })  // -- this method is the same as above function
 
@@ -68,7 +68,7 @@ exports.getTour = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: 'success',
     data: {
-      tours: tour
+      tours: tour,
     },
   });
 });

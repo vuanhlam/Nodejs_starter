@@ -9,7 +9,7 @@ const tourSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      require: [true, 'A tour must have a name'], 
+      require: [true, 'A tour must have a name'],
       unique: true,
       maxLength: [40, 'A tour name must have less or equal than 40 characters'], // maxLength and minLength only work for String value
       minLength: [10, 'A tour name must have more or equal than 10 characters'],
@@ -117,6 +117,7 @@ const tourSchema = new mongoose.Schema(
       },
     ],
     guides: [
+      //* Child Referencing
       {
         type: mongoose.Schema.ObjectId,
         ref: 'User',
@@ -192,8 +193,8 @@ tourSchema.pre('save', function (next) {
 // })
 
 /**
- *! Query Middleware allow us to run function before or after a certain "query" is executed
- */
+ *TODO: Query Middleware allow us to run function before or after a certain "query" is executed
+*/
 
 //* pre find Hook basically a Middleware gonna run before any find() query
 //* 'find' will point to the current query, not to the current document
@@ -203,6 +204,14 @@ tourSchema.pre(/^find/, function (next) {
   //* this key word point to the query, so that we can chain another find() method
   this.find({ secretTour: { $ne: true } }); // filter the secretTour is false, mean hide the secretTour
   this.start = Date.now();
+  next();
+});
+
+tourSchema.pre(/^find/, function (next) {
+  this.populate({
+    path: 'guides',
+    select: '-__v -passwordChangedAt', // exclude some field
+  });
   next();
 });
 
