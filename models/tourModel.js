@@ -1,7 +1,7 @@
 /* eslint-disable prefer-arrow-callback */
 const mongoose = require('mongoose');
 const slugify = require('slugify');
-const User = require('./userModal');
+// const User = require('./userModal');
 // const validator = require('validator');
 
 // create Schema
@@ -86,16 +86,18 @@ const tourSchema = new mongoose.Schema(
     },
     // the tour can be start in diffent date
     startDates: [Date],
-    secretTour: {    //* this object here is for Schema type Options
+    secretTour: {
+      //* this object here is for Schema type Options
       type: Boolean,
       default: false,
     },
-    startLocation: { //* this object here is actually an Embedded Object
+    startLocation: {
+      //* this object here is actually an Embedded Object
       // GeoJSON -> special data format to specify Geospatial Data
       type: {
         type: String,
         default: 'Point',
-        enum: ['Point']
+        enum: ['Point'],
       },
       coordinate: [Number],
       address: String,
@@ -111,10 +113,15 @@ const tourSchema = new mongoose.Schema(
         coordinates: [Number],
         address: String,
         description: String,
-        day: Number
-      }
+        day: Number,
+      },
     ],
-    guides: Array
+    guides: [
+      {
+        type: mongoose.Schema.ObjectId,
+        ref: 'User',
+      },
+    ],
   },
   {
     toJSON: { virtuals: true },
@@ -151,13 +158,11 @@ tourSchema.virtual('durationWeeks').get(function () {
  */
 
 //*  Modelling Tour Guides Embedding
-tourSchema.pre('save', async function(next) {
-  const guidesPromises = this.guides.map(async id => await User.findById(id));
-  this.guides = await Promise.all(guidesPromises)
-  next()
-})
-
-
+// tourSchema.pre('save', async function(next) {
+//   const guidesPromises = this.guides.map(async id => await User.findById(id));
+//   this.guides = await Promise.all(guidesPromises)
+//   next()
+// })
 
 // Define Middleware on the schema
 /**
