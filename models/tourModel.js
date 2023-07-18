@@ -207,7 +207,9 @@ tourSchema.pre(/^find/, function (next) {
   next();
 });
 
-tourSchema.pre(/^find/, function (next) {
+//* this Middleware apply to Child Referencing Modeling feature, when get data from the database 
+//* it will extract the Object Id to the corresponding data with that ID
+tourSchema.pre(/^find/, function (next) { //* apply to all query start with find
   this.populate({
     path: 'guides',
     select: '-__v -passwordChangedAt', // exclude some field
