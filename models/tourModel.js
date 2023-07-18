@@ -85,10 +85,34 @@ const tourSchema = new mongoose.Schema(
     },
     // the tour can be start in diffent date
     startDates: [Date],
-    secretTour: {
+    secretTour: {    //* this object here is for Schema type Options
       type: Boolean,
       default: false,
     },
+    startLocation: { //* this object here is actually an Embedded Object
+      // GeoJSON -> special data format to specify Geospatial Data
+      type: {
+        type: String,
+        default: 'Point',
+        enum: ['Point']
+      },
+      coordinate: [Number],
+      address: String,
+      description: String,
+    },
+    locations: [
+      {
+        type: {
+          type: String,
+          default: 'Point',
+          enum: ['Point'],
+        },
+        coordinates: [Number],
+        address: String,
+        description: String,
+        day: Number
+      }
+    ]
   },
   {
     toJSON: { virtuals: true },
