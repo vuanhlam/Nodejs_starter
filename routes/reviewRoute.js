@@ -5,7 +5,11 @@ const {
   createReview,
 } = require('../controllers/reviewController');
 
-const router = express.Router();
+/**
+ *! with the support of mergeParams we then can access to the tourId
+ *! which actually come from the orther router before. 
+*/
+const router = express.Router({ mergeParams: true }); 
 
 router.route('/').get(protect, getAllReviews).post(protect, reStrictTo('user'), createReview);
 

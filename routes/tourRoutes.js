@@ -10,9 +10,16 @@ const {
   getMonthlyPlan,
 } = require('../controllers/tourController');
 const { protect, reStrictTo } = require('../controllers/authController');
-const { createReview } = require('../controllers/reviewController');
+const reviewRouter = require('./reviewRoute');
 
 const router = express.Router();
+
+// router.route('/:tourId/reviews').post(protect, reStrictTo('user'), createReview)
+
+//* whenever find the url like this => /:tourId/reviews then just use reviewRouter
+//* this URL will be redirected to the reviewRouter also with the param :tourId
+router.use('/:tourId/reviews', reviewRouter);
+
 
 router.route('/tour-stats').get(getTourStats);
 
@@ -32,6 +39,5 @@ router
 // GET -> /tour/121sd32/reviews
 // GET -> /tour/323m23mm/reviews/1dwkw232
 
-router.route('/:tourId/reviews').post(protect, reStrictTo('user'), createReview)
 
 module.exports = router;
