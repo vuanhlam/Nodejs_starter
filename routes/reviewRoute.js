@@ -11,6 +11,11 @@ const {
 */
 const router = express.Router({ mergeParams: true }); 
 
+// POST /tour/as12121s/reviews
+// GET /tour/32323k233/reviews
+// POST /reviews
+
+
 router.route('/').get(protect, getAllReviews).post(protect, reStrictTo('user'), createReview);
 
 module.exports = router;
