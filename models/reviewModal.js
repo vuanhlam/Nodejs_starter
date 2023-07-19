@@ -34,5 +34,19 @@ const reviewSchema = new mongoose.Schema(
   }
 );
 
+//* This Middleware will extract the Object Id to the corresponding data with that ID
+//TODO: this one will going to add some extra query, in this case acually two query 
+//TODO: behind the sence mongoose will have to query both the tour and user to find the matching document ID    
+reviewSchema.pre(/^find/, function(next){
+    this.populate({
+        path: 'tour',
+        select: 'name'
+    }).populate({
+        path: 'user',
+        select: 'name photo'
+    })
+    next();
+})
+
 const Review = mongoose.model('Review', reviewSchema);
 module.exports = Review;
