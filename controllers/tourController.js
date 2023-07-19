@@ -57,7 +57,7 @@ exports.getTour = catchAsync(async (req, res, next) => {
    *! - but behind the sence it's gonna do exactly this  Tour.findOne({ _id: req.params.id })
    *! - but mongoose simply want to male our life esier
    */
-  const tour = await Tour.findById(req.params.id);
+  const tour = await Tour.findById(req.params.id).populate('reviews');
   // Tour.findOne({ _id: req.params.id })  // -- this method is the same as above function
 
   if (!tour) {

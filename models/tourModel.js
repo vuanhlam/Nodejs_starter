@@ -122,7 +122,7 @@ const tourSchema = new mongoose.Schema(
         type: mongoose.Schema.ObjectId,
         ref: 'User',
       },
-    ],
+    ]
   },
   {
     toJSON: { virtuals: true },
@@ -145,6 +145,17 @@ tourSchema.virtual('durationWeeks').get(function () {
 });
 
 /**
+ *TODO: Virtual populate 
+ *! allow us to populate the tour with reviews or we can access to all the reviews for a certain tour
+ *! but without keeping this array of id in the Tour modal
+*/
+tourSchema.virtual('reviews', {
+  ref: 'Review',
+  foreignField: 'tour',
+  localField: '_id'
+})
+
+/**
  *! just like Express, mongoose also have a concept of Middleware
  ** just like Express we can use mongoose's Middleware to make something happen between two events
  ** for example each time a new Document is saved to the database, we can run a function between the save command and actual saving of the document
@@ -158,24 +169,25 @@ tourSchema.virtual('durationWeeks').get(function () {
  *!  + Model
  */
 
+
+
+// Define Middleware on the schema
+/**
+ *TODO: DOCUMENT MIDDLEWARE: runs before .save() and .create() and not work with .insertMany() and update()
+ *! callback function will be called before an actual document is saved to the database
+ */
+//* just like in Express we also have next() func in mongoose Middleware basically to call the next Middleware in the stack
+tourSchema.pre('save', function (next) {
+  this.slug = slugify(this.name, { lower: true });
+  next();
+});
+
 //*  Modelling Tour Guides Embedding
 // tourSchema.pre('save', async function(next) {
 //   const guidesPromises = this.guides.map(async id => await User.findById(id));
 //   this.guides = await Promise.all(guidesPromises)
 //   next()
 // })
-
-// Define Middleware on the schema
-/**
- *! this is pre Middleware, which is gonna run before an actual event
- *! callback function will be called before an actual document is saved to the database
- */
-//* DOCUMENT MIDDLEWARE: runs before .save() and .create() and not work with .insertMany() and update()
-//* just like in Express we also have next() func in mongoose Middleware basically to call the next Middleware in the stack
-tourSchema.pre('save', function (next) {
-  this.slug = slugify(this.name, { lower: true });
-  next();
-});
 
 //* we can have multiple middleware pre or post Middleware for the same hook
 // eslint-disable-next-line prefer-arrow-callback
@@ -225,7 +237,7 @@ tourSchema.post(/^find/, function (docs, next) {
 });
 
 /**
- *! Aggregation Middleware allow us to run function before or after an aggregation happens
+ *TODO: Aggregation Middleware allow us to run function before or after an aggregation happens
  */
 tourSchema.pre('aggregate', function (next) {
   //* this key word point to the current aggregation object

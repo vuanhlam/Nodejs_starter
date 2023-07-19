@@ -38,10 +38,15 @@ const reviewSchema = new mongoose.Schema(
 //TODO: this one will going to add some extra query, in this case acually two query 
 //TODO: behind the sence mongoose will have to query both the tour and user to find the matching document ID    
 reviewSchema.pre(/^find/, function(next){
+    // this.populate({
+    //     path: 'tour',
+    //     select: 'name'
+    // }).populate({
+    //     path: 'user',
+    //     select: 'name photo'
+    // })
+
     this.populate({
-        path: 'tour',
-        select: 'name'
-    }).populate({
         path: 'user',
         select: 'name photo'
     })
