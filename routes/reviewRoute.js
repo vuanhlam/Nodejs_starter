@@ -11,20 +11,21 @@ const {
 
 /**
  *! with the support of mergeParams we then can access to the tourId
- *! which actually come from the orther router before.
+ *! which actually come from the tourRoute  before.
  */
 const router = express.Router({ mergeParams: true });
 
+router.use(authController.protect);
+
 router
   .route('/')
-  .get(authController.protect, getAllReviews)
-  .post(
-    authController.protect,
-    authController.reStrictTo('user'),
-    setTourUserIds,
-    createReview
-  );
+  .get(getAllReviews)
+  .post(authController.reStrictTo('user'), setTourUserIds, createReview);
 
-router.route('/:id').get(getReview).patch(updateReview).delete(deleteReview);
+router
+  .route('/:id')
+  .get(getReview)
+  .patch(authController.reStrictTo('user', 'admin'), updateReview)
+  .delete(authController.reStrictTo('user', 'admin'), deleteReview);
 
 module.exports = router;
