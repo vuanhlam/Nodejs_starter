@@ -7,6 +7,7 @@ const {
   deleteUser,
   updateMe,
   deleteMe,
+  getMe,
 } = require('../controllers/userController');
 const {
   signUp,
@@ -24,6 +25,9 @@ router.post('/login', login);
 router.post('/forgotPassword', forgotPassword);
 router.patch('/resetPassword/:token', resetPassword);
 router.patch('/updateMyPassword', protect, updatePassword); // only authenticated user can update Password
+
+
+router.get('/me', protect, getMe, getUser)
 router.patch('/updateMe', protect, updateMe); // only authenticated user can update profile
 router.delete('/deleteMe', protect, deleteMe);
 
