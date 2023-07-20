@@ -2,9 +2,7 @@
 /* eslint-disable no-unused-expressions */
 /* eslint-disable import/no-useless-path-segments */
 const Tour = require('./../models/tourModel');
-const APIFeatures = require('./../utils/apiFeatures');
 const catchAsync = require('../utils/catchAsync');
-const AppError = require('../utils/appError');
 const factory = require('./handlerFactory');
 
 exports.aliasTopTours = (req, res, next) => {
@@ -14,48 +12,9 @@ exports.aliasTopTours = (req, res, next) => {
   next();
 };
 
-exports.getAllTours = catchAsync(async (req, res, next) => {
-  // ---- EXECUTE QUERY ----
-  const features = new APIFeatures(Tour.find(), req.query)
-    .filter()
-    .sort()
-    .limitFields()
-    .paginate();
-  const tours = await features.mongooseQuery;
+exports.getAllTours = factory.getAll(Tour);
 
-  // ---- SEND RESPONSE ----
-  res.status(200).json({
-    status: 'success',
-    requestAt: req.requestTime,
-    results: tours.length,
-    data: {
-      tours: tours,
-    },
-  });
-});
-
-exports.getTour = catchAsync(async (req, res, next) => {
-  /**
-   *! - findById is just a shorthand or a helper function,
-   *! - we don't need to write like this => { _id: req.params.id }
-   *! - but behind the sence it's gonna do exactly this  Tour.findOne({ _id: req.params.id })
-   *! - but mongoose simply want to male our life esier
-   */
-  const tour = await Tour.findById(req.params.id).populate('reviews');
-  // Tour.findOne({ _id: req.params.id })  // -- this method is the same as above function
-
-  if (!tour) {
-    //* return immediately and not move on to the next line
-    return next(new AppError('No tour found with that ID', 404));
-  }
-
-  res.status(200).json({
-    status: 'success',
-    data: {
-      tours: tour,
-    },
-  });
-});
+exports.getTour = factory.getOne(Tour, 'reviews');
 
 exports.createTour = factory.createOne(Tour);
 
