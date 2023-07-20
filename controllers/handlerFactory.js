@@ -99,7 +99,7 @@ exports.getAll = (Model) =>
       .sort()
       .limitFields()
       .paginate();
-    const document = await features.mongooseQuery;
+    const document = await features.mongooseQuery.explain();
 
     // ---- SEND RESPONSE ----
     res.status(200).json({

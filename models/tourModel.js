@@ -122,13 +122,20 @@ const tourSchema = new mongoose.Schema(
         type: mongoose.Schema.ObjectId,
         ref: 'User',
       },
-    ]
+    ],
   },
   {
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
   }
 );
+
+/**
+ *! 1 is mean that we are sorting the price in an ascending order
+ */
+// tourSchema.index({ price: 1});
+tourSchema.index({ price: 1, ratingsAverage: -1 });
+tourSchema.index({ slug: 1 })
 
 /**
  *! Virtual Property is a property that not gonna be persisted or saved into the database
@@ -145,15 +152,15 @@ tourSchema.virtual('durationWeeks').get(function () {
 });
 
 /**
- *TODO: Virtual populate 
+ *TODO: Virtual populate
  *! allow us to populate the tour with reviews or we can access to all the reviews for a certain tour
  *! but without keeping this array of id in the Tour modal
-*/
+ */
 tourSchema.virtual('reviews', {
   ref: 'Review',
   foreignField: 'tour',
-  localField: '_id'
-})
+  localField: '_id',
+});
 
 /**
  *! just like Express, mongoose also have a concept of Middleware
@@ -168,8 +175,6 @@ tourSchema.virtual('reviews', {
  *!  + Aggregate
  *!  + Model
  */
-
-
 
 // Define Middleware on the schema
 /**
@@ -206,7 +211,7 @@ tourSchema.pre('save', function (next) {
 
 /**
  *TODO: Query Middleware allow us to run function before or after a certain "query" is executed
-*/
+ */
 
 //* pre find Hook basically a Middleware gonna run before any find() query
 //* 'find' will point to the current query, not to the current document
@@ -219,9 +224,10 @@ tourSchema.pre(/^find/, function (next) {
   next();
 });
 
-//* this Middleware apply to Child Referencing Modeling feature, when get data from the database 
+//* this Middleware apply to Child Referencing Modeling feature, when get data from the database
 //* it will extract the Object Id to the corresponding data with that ID
-tourSchema.pre(/^find/, function (next) { //* apply to all query start with find
+tourSchema.pre(/^find/, function (next) {
+  //* apply to all query start with find
   this.populate({
     path: 'guides',
     select: '-__v -passwordChangedAt', // exclude some field
