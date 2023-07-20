@@ -14,6 +14,10 @@ const reviewRouter = require('./reviewRoute');
 
 const router = express.Router();
 
+// POST /tour/as12121s/reviews
+// GET /tour/32323k233/reviews => get all review about this tour
+// POST /reviews
+
 // router.route('/:tourId/reviews').post(protect, reStrictTo('user'), createReview)
 
 //* whenever find the url like this => /:tourId/reviews then just use reviewRouter

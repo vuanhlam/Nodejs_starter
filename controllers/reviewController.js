@@ -1,6 +1,7 @@
 /* eslint-disable import/no-useless-path-segments */
 const Review = require('./../models/reviewModal');
 const catchAsync = require('./../utils/catchAsync');
+const factory = require('./handlerFactory');
 
 exports.createReview = catchAsync(async (req, res, next) => {
   // Allow nested routes
@@ -30,3 +31,5 @@ exports.getAllReviews = catchAsync(async (req, res, next) => {
     },
   });
 });
+
+exports.deleteReview = factory.deleteOne(Review);

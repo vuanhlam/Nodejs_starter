@@ -3,19 +3,20 @@ const { protect, reStrictTo } = require('../controllers/authController');
 const {
   getAllReviews,
   createReview,
+  deleteReview,
 } = require('../controllers/reviewController');
 
 /**
  *! with the support of mergeParams we then can access to the tourId
- *! which actually come from the orther router before. 
-*/
-const router = express.Router({ mergeParams: true }); 
+ *! which actually come from the orther router before.
+ */
+const router = express.Router({ mergeParams: true });
 
-// POST /tour/as12121s/reviews
-// GET /tour/32323k233/reviews
-// POST /reviews
+router
+  .route('/')
+  .get(protect, getAllReviews)
+  .post(protect, reStrictTo('user'), createReview);
 
-
-router.route('/').get(protect, getAllReviews).post(protect, reStrictTo('user'), createReview);
+router.route('/:id').delete(deleteReview);
 
 module.exports = router;
