@@ -131,10 +131,14 @@ const tourSchema = new mongoose.Schema(
 );
 
 /**
- *! 1 is mean that we are sorting the price in an ascending order
+ *! Read Performance In mongoDB
+ *! We can create Indexes on a specific field in a collection, for Example mongoDB automatically create an Indexes on the _id field by default
+ ** - basically we need to carefully study the access pattern of our application, in order to figure out which field are query the most and then set Indexes for these fields
+ ** - Finally when decideing wheather to Indexs a certain field or not we must kind of balance the frequency of query using that field with the code maintian this Indexes 
+ ** also with the read, write pattern of the resource 
  */
 // tourSchema.index({ price: 1});
-tourSchema.index({ price: 1, ratingsAverage: -1 });
+tourSchema.index({ price: 1, ratingsAverage: -1 }); // this is called Compound Indexes
 tourSchema.index({ slug: 1 })
 
 /**
