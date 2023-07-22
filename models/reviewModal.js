@@ -36,6 +36,9 @@ const reviewSchema = new mongoose.Schema(
   }
 );
 
+reviewSchema.index({ tour: 1, user: 1 }, { unique: true });
+  
+
 //* This Middleware will extract the Object Id to the corresponding data with that ID
 //TODO: this one will going to add some extra query, in this case acually two query
 //TODO: behind the sence mongoose will have to query both the tour and user to find the matching document ID
