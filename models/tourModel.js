@@ -216,20 +216,19 @@ tourSchema.pre('save', function (next) {
 /**
  *TODO: Query Middleware allow us to run function before or after a certain "query" is executed
  */
-
-//* pre find Hook basically a Middleware gonna run before any find() query
-//* 'find' will point to the current query, not to the current document
+// pre find Hook basically a Middleware gonna run before any find() query
+// 'find' will point to the current query, not to the current document
 // tourSchema.pre('find', function(next) { // pre find hook will not work for findOne
 tourSchema.pre(/^find/, function (next) {
-  // we will using regex to apply to all the event that start with name find
-  //* this key word point to the query, so that we can chain another find() method
+  //* we will using regex to apply to all the event that start with name find
+  //* this key word point to the current query, so that we can chain another find() method
   this.find({ secretTour: { $ne: true } }); // filter the secretTour is false, mean hide the secretTour
   this.start = Date.now();
   next();
 });
 
-//* this Middleware apply to Child Referencing Modeling feature, when get data from the database
-//* it will extract the Object Id to the corresponding data with that ID
+// this Middleware apply to Child Referencing Modeling feature, when get data from the database
+// it will extract the Object Id to the corresponding data with that ID
 tourSchema.pre(/^find/, function (next) {
   //* apply to all query start with find
   this.populate({
@@ -239,7 +238,7 @@ tourSchema.pre(/^find/, function (next) {
   next();
 });
 
-//* this Midleware only run after the Qeury have already executed
+// this Midleware only run after the Query have already executed
 tourSchema.post(/^find/, function (docs, next) {
   console.log(`Query took ${Date.now() - this.start} milliseconds`);
   // console.log(docs);

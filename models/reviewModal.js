@@ -78,23 +78,52 @@ reviewSchema.statics.calcAverageratings = async function (tourId) {
     },
   ]);
 
-  await Tour.findByIdAndUpdate(tourId, {
-    ratingsQuantity: stats[0].nRating,
-    ratingsAverage: stats[0].avgRating
-  })
+  // console.log(stats);
+  if (stats.length > 0) {
+    await Tour.findByIdAndUpdate(tourId, {
+      ratingsQuantity: stats[0].nRating,
+      ratingsAverage: stats[0].avgRating,
+    });
+  } else {
+    await Tour.findByIdAndUpdate(tourId, {
+      ratingsQuantity: 0,
+      ratingsAverage: 4.5,
+    });
+  }
 };
 
-//TODO: post Middleware does not access to next
+//TODO: Calculating statistic when a review is created
+// post Middleware does not access to next
 // Why do not use pre save Middleware, because we can not query the document that have not yet persited in the database
-// and so that we dont have data to aggregate 
+// and so that we dont have data to aggregate
 reviewSchema.post('save', function () {
-  //* in this function, the this keyword points to the current document will be save => review
+  //* in this function, the this keyword points to the current document will be saved  => review
   /**
    ** this -> is a current document
    ** constructor is the model who created that document
    ** this.constructor -> Review model
    */
   this.constructor.calcAverageratings(this.tour);
+});
+
+//TODO: Calculating statistic this time for when a review is updated or deleted
+// This part is actually a bit harder, that a review is updated or deleted using findByIdAndUpdate findByIdAndDelete
+// For this we don't have Document Middleware but only Query Middleware
+// So in query M we don't have directly access to the document in order to call function calcAverageratings
+// Because we need access to the current review so that from there can extract the tourId and then calculate the statistic
+// But these hook findByIdAndUpdate, findByIdAndDelete we only have query Middlware
+
+reviewSchema.pre(/^findOneAnd/, async function (next) {
+  //* this key word is point to the current query,
+  //* so we can execute the query to get the document currently being process and save it to the review property
+  this.review = await this.findOne();
+  // console.log(this);
+  next();
+});
+
+reviewSchema.post(/^findOneAnd/, async function () {
+  //* this.review is the current document that we have just found in the previous pre hook
+  await this.review.constructor.calcAverageratings(this.review.tour);
 });
 
 const Review = mongoose.model('Review', reviewSchema);
