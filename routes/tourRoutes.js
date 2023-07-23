@@ -9,6 +9,7 @@ const {
   getTourStats,
   getMonthlyPlan,
   getTourWithin,
+  getDistances,
 } = require('../controllers/tourController');
 const authController = require('../controllers/authController');
 const reviewRouter = require('./reviewRoute');
@@ -35,8 +36,12 @@ router
     getMonthlyPlan
   );
 
-router.route('/tours-distance/:distance/center/:latlng/unit/:unit').get(getTourWithin)
+router
+  .route('/tours-distance/:distance/center/:latlng/unit/:unit')
+  .get(getTourWithin);
 // we also can use query String to specify the url like: /tour-distance?distance=233&center=-40,45&unit=mi
+
+router.route('/distances/:latlng/unit/:unit').get(getDistances);
 
 router.route('/top-5-cheap').get(aliasTopTours, getAllTours);
 

@@ -250,14 +250,15 @@ tourSchema.post(/^find/, function (docs, next) {
 /**
  *TODO: Aggregation Middleware allow us to run function before or after an aggregation happens
  */
-tourSchema.pre('aggregate', function (next) {
-  //* this key word point to the current aggregation object
-  //* unshift() will add an element to the beginning of the array
-  // console.log(this.pipeline());
-  //* add new state to the beginning of the array of the pipeline
-  this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
-  next();
-});
+// tourSchema.pre('aggregate', function (next) {
+//   //* this key word point to the current aggregation object
+//   //* unshift() will add an element to the beginning of the array
+//   // console.log(this.pipeline());
+//   //* add new state to the beginning of the array of the pipeline
+//   this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
+//   console.log(this.pipeline());
+//   next();
+// });
 
 //create Modal
 const Tour = mongoose.model('Tour', tourSchema);
