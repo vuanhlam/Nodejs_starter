@@ -4,6 +4,7 @@
 const Tour = require('./../models/tourModel');
 const catchAsync = require('../utils/catchAsync');
 const factory = require('./handlerFactory');
+const AppError = require('../utils/appError');
 
 exports.aliasTopTours = (req, res, next) => {
   req.query.limit = '5';
@@ -122,6 +123,47 @@ exports.getMonthlyPlan = catchAsync(async (req, res, next) => {
     total: plan.length,
     data: {
       plan,
+    },
+  });
+});
+
+// latlng
+// lat = Latitude -> vĩ độ
+// lng = longitude -> kinh độ
+// /tours-distance/299/center/34.112873, -118.206000/unit/mi
+exports.getTourWithin = catchAsync(async (req, res, next) => {
+  const { distance, latlng, unit } = req.params;
+  const [lat, lng] = latlng.split(',');
+
+  //! the radius basically the distance we want to have as the radius but converted to a special unit call radian  
+  const radius = unit === 'mi' ? distance / 3963.2 : distance / 6378.1;
+
+  if (!lat || !lng) {
+    return next(
+      new AppError(
+        'Please provide latitude and longitude in the format lat,lng.',
+        400
+      )
+    );
+  }
+
+  //* Geospatial Queries
+  /**
+   *! All we need to do is to specify all filter Object here
+   *! we need to query startlocation, because the startLocation is holded the geospatial point where each tour start
+   *! geoSpatial Operator => $geoWithin, this operator does exactly what it's said, so basically find document within a certain geometry
+   *! $centerSphere => take in an array of the coordinate and radius(actually not pass the distance but instead mongoDB expect a radian unit)
+   */
+  const tours = await Tour.find({
+    startLocation: { $geoWithin: { $centerSphere: [[lng, lat], radius] } },
+  });
+
+  console.log(distance, lat, lng, unit);
+  res.status(200).json({
+    status: 'success',
+    results: tours.length,
+    data: {
+      data: tours,
     },
   });
 });

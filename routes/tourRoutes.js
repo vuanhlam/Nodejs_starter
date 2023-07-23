@@ -8,6 +8,7 @@ const {
   aliasTopTours,
   getTourStats,
   getMonthlyPlan,
+  getTourWithin,
 } = require('../controllers/tourController');
 const authController = require('../controllers/authController');
 const reviewRouter = require('./reviewRoute');
@@ -33,6 +34,9 @@ router
     authController.reStrictTo('admin', 'lead-guide', 'guide'),
     getMonthlyPlan
   );
+
+router.route('/tours-distance/:distance/center/:latlng/unit/:unit').get(getTourWithin)
+// we also can use query String to specify the url like: /tour-distance?distance=233&center=-40,45&unit=mi
 
 router.route('/top-5-cheap').get(aliasTopTours, getAllTours);
 
