@@ -1,4 +1,5 @@
 const express = require('express');
+const multer = require('multer');
 const {
   getAllUsers,
   createUser,
@@ -19,6 +20,8 @@ const {
   reStrictTo,
   logout,
 } = require('../controllers/authController');
+
+const upload = multer({ dest: 'public/img/users' })
 
 const router = express.Router();
 
@@ -41,7 +44,7 @@ router.patch('/updateMyPassword', updatePassword); // only authenticated user ca
 
 router.get('/me', getMe, getUser)
 
-router.patch('/updateMe', updateMe); // only authenticated user can update profile
+router.patch('/updateMe', upload.single('photo'), updateMe); // only authenticated user can update profile
 
 router.delete('/deleteMe', deleteMe);
 
