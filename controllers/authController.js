@@ -21,7 +21,7 @@ const createSendToken = (user, statusCode, res) => {
   const cookieOptions = {
     expires: new Date(
       Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000 // convert to milisecond 24 * 60 * 60 * 1000
-    ), 
+    ),
     httpOnly: true, // cookie can not be accessed or modify in anyway by the browser
   };
 
@@ -95,7 +95,10 @@ exports.protect = catchAsync(async (req, res, next) => {
     req.headers.authorization.startsWith('Bearer')
   ) {
     token = req.headers.authorization.split(' ')[1];
+  } else if (req.cookies.jwt) {
+    token = req.cookies.jwt;
   }
+
   if (!token) {
     return next(
       new AppError('You are not login! Please log in to get Access.', 401)
@@ -129,9 +132,46 @@ exports.protect = catchAsync(async (req, res, next) => {
     );
   }
 
-  // 5) GRANT ACCESS TO PROTECTED ROUTE
+  //TODO (5) GRANT ACCESS TO PROTECTED ROUTE
   req.user = currentUser;
 
+  next();
+});
+
+//* Only for rendered pages, no errors!
+exports.isLoggedIn = catchAsync(async (req, res, next) => {
+  if (req.cookies.jwt) {
+    //TODO (1) Verification the token -> compare test signature and original signature
+    const decoded = await promisify(jwt.verify)(
+      req.cookies.jwt,
+      process.env.JWT_SECRET
+    ); // if error happen it will return an Invalid signature or JsonWebTokenError
+
+    //TODO (2) Check if user still exists
+    /**
+     *! Why need to be check if user still exists
+     *! - What if the user has been deleted in the meantime, so the token still exits, but the user is no longer in existence
+     *! then we don't want to log them in
+     */
+    const currentUser = await User.findById(decoded.id);
+    if (!currentUser) {
+      return next();
+    }
+
+    //TODO (3) Check if user changed password after the token was issued
+    /**
+     *! - What if user has actually changed his password after the token was created, well that token should also not work anymore
+     *! for example someone stole token from a user, so all token that was issued before the password changed so longer be valid
+     */
+    if (currentUser.changedPasswordAfter(decoded.iat)) {
+      return next();
+    }
+
+    //TODO (5) THERE IS A LOGGED IN USER
+    // eslint-disable-next-line no-unused-expressions
+    res.locals.user = currentUser;
+    return next();
+  }
   next();
 });
 
