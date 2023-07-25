@@ -11,25 +11,25 @@ const multerStorage = multer.diskStorage({
     cb(null, 'public/img/users');
   },
   filename: (req, file, cb) => {
-    const ext = file.mimetype.split('/')[1];  
+    const ext = file.mimetype.split('/')[1];
     cb(null, `user-${req.user.id}-${Date.now()}.${ext}`);
   },
-})
+});
 
 const multerFilter = (req, file, cb) => {
-  if(file.mimetype.startsWith('image')) {
-    cb(null, true)
-  }else {
+  if (file.mimetype.startsWith('image')) {
+    cb(null, true);
+  } else {
     cb(new AppError('Not an image! Please upload only image', 400), false);
   }
-}
+};
 
 const upload = multer({
   storage: multerStorage,
-  fileFilter: multerFilter
-})
+  fileFilter: multerFilter,
+});
 
-exports.uploadUserPhoto = upload.single('photo')
+exports.uploadUserPhoto = upload.single('photo');
 
 const filterObj = (obj, ...allowedFields) => {
   const newObj = {};
@@ -52,7 +52,6 @@ exports.createUser = (req, res) => {
  *! only have permission update name and email
  */
 exports.updateMe = catchAsync(async (req, res, next) => {
-
   console.log(req.file);
   console.log(req.body);
 
@@ -63,6 +62,7 @@ exports.updateMe = catchAsync(async (req, res, next) => {
 
   //TODO (2) Filtered out unwanted fields names that are not allowed to be updated
   const filteredObject = filterObj(req.body, 'name', 'email');
+  if (req.file) filteredObject.photo = req.file.filename;
 
   //TODO (2) Update user document
   /**
@@ -88,24 +88,24 @@ exports.updateMe = catchAsync(async (req, res, next) => {
 });
 
 exports.deleteMe = catchAsync(async (req, res, next) => {
-  await User.findByIdAndUpdate(req.user.id, { active: false })
+  await User.findByIdAndUpdate(req.user.id, { active: false });
 
   res.status(204).json({
     status: 'success',
-    data: null
-  })
+    data: null,
+  });
 });
 
 exports.getMe = (req, res, next) => {
-  req.params.id = req.user.id; 
+  req.params.id = req.user.id;
   next();
-}
+};
 
 exports.getAllUsers = factory.getAll(User);
 
-exports.getUser = factory.getOne(User)
+exports.getUser = factory.getOne(User);
 
 // Do not update passwords with this!
 exports.updateUser = factory.updateOne(User);
 
-exports.deleteUser = factory.deleteOne(User)
+exports.deleteUser = factory.deleteOne(User);
