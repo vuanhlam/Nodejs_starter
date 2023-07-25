@@ -87,6 +87,15 @@ exports.login = catchAsync(async (req, res, next) => {
   createSendToken(user, 200, res);
 });
 
+exports.logout = catchAsync(async (req, res, next) => {
+  res.cookie('jwt', '', {
+    expires: new Date(Date.now() + 10 * 1000),
+    httpOnly: true,
+  });
+
+  res.status(200).json({ status: 'success' });
+});
+
 exports.protect = catchAsync(async (req, res, next) => {
   let token;
   //TODO (1) Getting token and check of it's there
@@ -139,41 +148,46 @@ exports.protect = catchAsync(async (req, res, next) => {
 });
 
 //* Only for rendered pages, no errors!
-exports.isLoggedIn = catchAsync(async (req, res, next) => {
+exports.isLoggedIn = async (req, res, next) => {
   if (req.cookies.jwt) {
-    //TODO (1) Verification the token -> compare test signature and original signature
-    const decoded = await promisify(jwt.verify)(
-      req.cookies.jwt,
-      process.env.JWT_SECRET
-    ); // if error happen it will return an Invalid signature or JsonWebTokenError
+    try {
+      //TODO (1) Verification the token -> compare test signature and original signature
+      const decoded = await promisify(jwt.verify)(
+        req.cookies.jwt,
+        process.env.JWT_SECRET
+      ); // if error happen it will return an Invalid signature or JsonWebTokenError
 
-    //TODO (2) Check if user still exists
-    /**
-     *! Why need to be check if user still exists
-     *! - What if the user has been deleted in the meantime, so the token still exits, but the user is no longer in existence
-     *! then we don't want to log them in
-     */
-    const currentUser = await User.findById(decoded.id);
-    if (!currentUser) {
+      //TODO (2) Check if user still exists
+      /**
+       *! Why need to be check if user still exists
+       *! - What if the user has been deleted in the meantime, so the token still exits, but the user is no longer in existence
+       *! then we don't want to log them in
+       */
+      const currentUser = await User.findById(decoded.id);
+      if (!currentUser) {
+        return next();
+      }
+
+      //TODO (3) Check if user changed password after the token was issued
+      /**
+       *! - What if user has actually changed his password after the token was created, well that token should also not work anymore
+       *! for example someone stole token from a user, so all token that was issued before the password changed so longer be valid
+       */
+      if (currentUser.changedPasswordAfter(decoded.iat)) {
+        return next();
+      }
+
+      //TODO (5) THERE IS A LOGGED IN USER
+      // eslint-disable-next-line no-unused-expressions
+      res.locals.user = currentUser;
       return next();
+    } catch (error) {
+      console.log(error);
+      return next();  
     }
-
-    //TODO (3) Check if user changed password after the token was issued
-    /**
-     *! - What if user has actually changed his password after the token was created, well that token should also not work anymore
-     *! for example someone stole token from a user, so all token that was issued before the password changed so longer be valid
-     */
-    if (currentUser.changedPasswordAfter(decoded.iat)) {
-      return next();
-    }
-
-    //TODO (5) THERE IS A LOGGED IN USER
-    // eslint-disable-next-line no-unused-expressions
-    res.locals.user = currentUser;
-    return next();
   }
   next();
-});
+};
 
 exports.reStrictTo = (...roles) => {
   return catchAsync(async (req, res, next) => {
