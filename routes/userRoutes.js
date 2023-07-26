@@ -9,6 +9,7 @@ const {
   deleteMe,
   getMe,
   uploadUserPhoto,
+  resizeUserPhoto,
 } = require('../controllers/userController');
 const {
   signUp,
@@ -43,7 +44,7 @@ router.patch('/updateMyPassword', updatePassword); // only authenticated user ca
 
 router.get('/me', getMe, getUser)
 
-router.patch('/updateMe', uploadUserPhoto, updateMe); // only authenticated user can update profile
+router.patch('/updateMe', uploadUserPhoto, resizeUserPhoto,updateMe); // only authenticated user can update profile
 
 router.delete('/deleteMe', deleteMe);
 
