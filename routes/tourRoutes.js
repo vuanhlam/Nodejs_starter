@@ -10,6 +10,8 @@ const {
   getMonthlyPlan,
   getTourWithin,
   getDistances,
+  uploadTourImages,
+  resizeTourImages,
 } = require('../controllers/tourController');
 const authController = require('../controllers/authController');
 const reviewRouter = require('./reviewRoute');
@@ -45,14 +47,11 @@ router.route('/distances/:latlng/unit/:unit').get(getDistances);
 
 router.route('/top-5-cheap').get(aliasTopTours, getAllTours);
 
-router
-  .route('/')
-  .get(getAllTours)
-  .post(
-    authController.protect,
-    authController.reStrictTo('admin', 'lead-guide'),
-    createTour
-  );
+router.route('/').get(getAllTours).post(
+  authController.protect,
+  authController.reStrictTo('admin', 'lead-guide'),
+  createTour
+);
 
 router
   .route('/:id')
@@ -60,6 +59,8 @@ router
   .patch(
     authController.protect,
     authController.reStrictTo('admin', 'lead-guide'),
+    uploadTourImages,
+    resizeTourImages,
     updateTour
   )
   .delete(
