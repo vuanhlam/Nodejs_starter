@@ -25,6 +25,17 @@ const upload = multer({
   fileFilter: multerFilter,
 });
 
+/**
+ *! if we have just one field and accept multiple images or multiple file as the same time
+ *! we can have done it like this
+ *TODO: upload.array('field name', 5) => on the request it will put the file property like this -> req.files
+ *! if we have one field that accept only one image
+ *! we can have done it like this
+ *TODO: upload.single('field name') => on the request it will put the file property like this -> req.file
+ *! if we have mix of them
+ *! we can have done it like this
+ *TODO: upload.fields([{name: 'field name', maxCount: 1}, {name: 'field name', maxCount: 3}])
+ */
 exports.uploadTourImages = upload.fields([
   {
     name: 'imageCover',
@@ -33,10 +44,37 @@ exports.uploadTourImages = upload.fields([
   { name: 'images', maxCount: 3 },
 ]);
 
-exports.resizeTourImages = (req, res, next) => {
-  console.log(req.files);
-  next()
-}
+exports.resizeTourImages = catchAsync(async (req, res, next) => {
+  // console.log(req.files);
+
+  if (!req.files.imageCover || !req.files.images) return next();
+
+  //TODO (1) Cover image
+  req.body.imageCover = `tour-${req.params.id}-${Date.now()}-cover.jpeg`;
+  await sharp(req.files.imageCover[0].buffer)
+    .resize(2000, 1333)
+    .toFormat('jpeg')
+    .jpeg({ quality: 90 })
+    .toFile(`public/img/tours/${req.body.imageCover}`);
+
+  //TODO (2) Images
+  req.body.images = [];
+  await Promise.all(
+    req.files.images.map(async (file, index) => {
+      const filename = `tour-${req.params.id}-${Date.now()}-${index + 1}.jpeg`;
+
+      await sharp(file.buffer)
+        .resize(2000, 1333)
+        .toFormat('jpeg')
+        .jpeg({ quality: 90 })
+        .toFile(`public/img/tours/${filename}`);
+      req.body.images.push(filename);
+    })
+  );
+
+  console.log(req.body.images);
+  next();
+});
 
 exports.aliasTopTours = (req, res, next) => {
   req.query.limit = '5';
