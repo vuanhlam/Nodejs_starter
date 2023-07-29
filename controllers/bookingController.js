@@ -2,6 +2,7 @@
 /* eslint-disable import/no-useless-path-segments */
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const Tour = require('./../models/tourModel');
+const Booking = require('./../models/bookingModal');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 
@@ -43,4 +44,13 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
     status: 'success',
     session,
   });
+});
+
+exports.createBookingCheckout = catchAsync(async (req, res, next) => {
+  const { tour, user, price } = req.query;
+  if (!tour && !user && !price)
+    return next(new AppError('some of the fields are not exist!'));
+
+  await Booking.create({ tour, user, price });
+  next()
 });

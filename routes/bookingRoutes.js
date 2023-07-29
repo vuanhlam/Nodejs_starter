@@ -11,4 +11,6 @@ router.get(
   bookingController.getCheckoutSession
 );
 
+router.route('/createNew').post(bookingController.createBookingCheckout)
+
 module.exports = router;
